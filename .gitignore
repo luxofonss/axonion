@@ -1,0 +1,8 @@
+.myvenv/
+.venv/
+__pycache__/
+data/
+lib/
+source_atlas/lsp/multilspy/language_servers/eclipse_jdtls/static
+.idea
+data/
