@@ -212,19 +212,21 @@ class Neo4jService:
         chunks: List[CodeChunk], 
         project_id: int,
         current_branch: str,
+        main_branch: str,
         batch_size: int = 50
     ):
         """
-        Import code chunks and create BRANCH relationships to corresponding nodes in other branches.
+        Import code chunks and create BRANCH relationships to corresponding nodes in main branch.
         
-        This links nodes representing the same entity across different branches:
-        - Method X in main -> BRANCH -> Method X in develop
-        - Class Y in main -> BRANCH -> Class Y in feature/auth
+        This links nodes representing the same entity between current branch and main branch:
+        - Method X in develop -> BRANCH -> Method X in main
+        - Class Y in feature/auth -> BRANCH -> Class Y in main
         
         Args:
             chunks: List of code chunks to import
             project_id: Project ID
             current_branch: Branch name being imported
+            main_branch: Main branch name to create relationships with
             batch_size: Batch size for queries
         """
         # Step 1: Import the chunks normally
@@ -236,29 +238,31 @@ class Neo4jService:
         
         logger.info(
             f"Creating BRANCH relationships for {len(chunks)} chunks "
-            f"(project_id={project_id}, branch={current_branch})"
+            f"(project_id={project_id}, current_branch={current_branch}, main_branch={main_branch})"
         )
         
-        # Step 2: Create BRANCH relationships between corresponding nodes in different branches
+        # Step 2: Create BRANCH relationships between current branch and main branch nodes
         branch_rel_queries = self._generate_branch_relationships(
-            chunks, project_id, current_branch, batch_size
+            chunks, project_id, current_branch, main_branch, batch_size
         )
         
         if branch_rel_queries:
             self.execute_queries_batch(branch_rel_queries)
-            logger.info(f"Created BRANCH relationships for branch '{current_branch}'")
+            logger.info(f"Created BRANCH relationships from '{current_branch}' to '{main_branch}'")
     
     def _generate_branch_relationships(
         self,
         chunks: List[CodeChunk],
         project_id: int,
         current_branch: str,
+        main_branch: str,
         batch_size: int = 100
     ) -> List[Tuple[str, Dict]]:
         """
-        Generate queries to create BRANCH relationships between nodes in different branches.
+        Generate queries to create BRANCH relationships between current branch nodes and main branch nodes.
         
-        Links corresponding nodes (same class/method name, same project, different branch).
+        Links corresponding nodes (same class/method name, same project) from current branch to main branch.
+        Uses existing 'branch' property of nodes to identify and link them.
         """
         all_queries = []
         
@@ -274,7 +278,8 @@ class Neo4jService:
                 class_nodes.append({
                     'class_name': chunk.full_class_name,
                     'project_id': project_id,
-                    'current_branch': current_branch
+                    'current_branch': current_branch,
+                    'main_branch': main_branch
                 })
                 
                 # Method-level nodes
@@ -283,7 +288,8 @@ class Neo4jService:
                         'class_name': chunk.full_class_name,
                         'method_name': method.name,
                         'project_id': project_id,
-                        'current_branch': current_branch
+                        'current_branch': current_branch,
+                        'main_branch': main_branch
                     })
             
             # Create BRANCH relationships for class nodes
@@ -296,13 +302,13 @@ class Neo4jService:
                     branch: node.current_branch
                 })
                 WHERE current.method_name IS NULL
-                MATCH (other:ClassNode {
+                MATCH (main:ClassNode {
                     class_name: node.class_name, 
-                    project_id: node.project_id
+                    project_id: node.project_id,
+                    branch: node.main_branch
                 })
-                WHERE other.method_name IS NULL 
-                  AND other.branch <> node.current_branch
-                MERGE (current)-[:BRANCH]->(other)
+                WHERE main.method_name IS NULL
+                MERGE (current)-[:BRANCH]->(main)
                 """
                 all_queries.append((class_branch_query, {'nodes': class_nodes}))
             
@@ -317,17 +323,16 @@ class Neo4jService:
                     branch: node.current_branch
                 })
                 WHERE current.method_name IS NOT NULL
-                MATCH (other {
+                MATCH (main {
                     class_name: node.class_name,
                     method_name: node.method_name,
-                    project_id: node.project_id
+                    project_id: node.project_id,
+                    branch: node.main_branch
                 })
-                WHERE other.method_name IS NOT NULL 
-                  AND other.branch <> node.current_branch
-                MERGE (current)-[:BRANCH]->(other)
+                WHERE main.method_name IS NOT NULL
+                MERGE (current)-[:BRANCH]->(main)
                 """
                 all_queries.append((method_branch_query, {'nodes': method_nodes}))
         
         return all_queries
-
 

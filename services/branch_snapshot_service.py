@@ -96,11 +96,12 @@ class BranchSnapshotService(BaseService):
             self.neo4j_service.import_code_chunks_with_branch_relations(
                 chunks=chunks,
                 project_id=project_id,
-                current_branch=branch_name
+                current_branch=branch_name,
+                main_branch=main_branch
             )
             logger.info(
                 f"Imported {len(chunks)} chunks into Neo4j for branch '{branch_name}' "
-                f"and created BRANCH relationships to other branches"
+                f"and created BRANCH relationships to main branch '{main_branch}'"
             )
         
         # Step 6: Record the snapshot
