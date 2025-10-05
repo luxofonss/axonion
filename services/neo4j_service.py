@@ -41,7 +41,7 @@ class Neo4jService:
                 except Exception as e:
                     logger.error(f"Error creating index: {str(e)}")
 
-    def generate_cypher_from_chunks(self, chunks: List[CodeChunk], batch_size: int = 100, main_branch: str = None) -> List[Tuple[str, Dict]]:
+    def generate_cypher_from_chunks(self, chunks: List[CodeChunk], batch_size: int = 100, main_branch: str = None, base_branch: str = None, pull_request_id: str = None) -> List[Tuple[str, Dict]]:
         all_queries = []
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i:i+batch_size]
@@ -62,14 +62,20 @@ class Neo4jService:
                     'branch': chunk.branch
                 })
                 
-                node_data.append({
+                node_data_item = {
                     'node_type': node_type,
                     'file_path': file_path,
                     'class_name': class_name,
                     'content': content,
                     'project_id': str(chunk.project_id),
                     'branch': chunk.branch
-                })
+                }
+                
+                # Add pull_request_id if branch is not main_branch
+                if pull_request_id and chunk.branch != main_branch:
+                    node_data_item['pull_request_id'] = pull_request_id
+                
+                node_data.append(node_data_item)
                 
                 for method in chunk.methods:
                     method_file_path = chunk.file_path
@@ -93,7 +99,7 @@ class Neo4jService:
                         'branch': method.branch
                     })
                     
-                    node_data.append({
+                    method_node_data_item = {
                         'node_type': method_node_type,
                         'file_path': method_file_path,
                         'class_name': method_class_name,
@@ -101,30 +107,106 @@ class Neo4jService:
                         'content': method_content,
                         'project_id': str(method.project_id),
                         'branch': method.branch
-                    })
+                    }
+                    
+                    # Add pull_request_id if branch is not main_branch
+                    if pull_request_id and method.branch != main_branch:
+                        method_node_data_item['pull_request_id'] = pull_request_id
+                    
+                    node_data.append(method_node_data_item)
 
-            # Delete existing class nodes first
+            # Delete existing nodes - include pull_request_id in matching if provided
             if class_nodes_to_delete:
-                delete_class_query = """
-                UNWIND $nodes AS node
-                MATCH (n {class_name: node.class_name, project_id: node.project_id, branch: node.branch})
-                WHERE n.method_name IS NULL
-                DETACH DELETE n
-                """
+                if pull_request_id:
+                    # Delete class nodes by branch and pull_request_id
+                    delete_class_query = """
+                    UNWIND $nodes AS node
+                    MATCH (n {class_name: node.class_name, project_id: node.project_id, branch: node.branch, pull_request_id: node.pull_request_id})
+                    WHERE n.method_name IS NULL
+                    DETACH DELETE n
+                    """
+                    # Add pull_request_id to each node for deletion
+                    for node in class_nodes_to_delete:
+                        node['pull_request_id'] = pull_request_id
+                else:
+                    # Delete class nodes by branch only (for main branch or when no pull_request_id)
+                    delete_class_query = """
+                    UNWIND $nodes AS node
+                    MATCH (n {class_name: node.class_name, project_id: node.project_id, branch: node.branch})
+                    WHERE n.method_name IS NULL AND n.pull_request_id IS NULL
+                    DETACH DELETE n
+                    """
                 all_queries.append((delete_class_query, {'nodes': class_nodes_to_delete}))
             
-            # Delete existing method nodes
             if method_nodes_to_delete:
-                delete_method_query = """
-                UNWIND $nodes AS node
-                MATCH (n {class_name: node.class_name, method_name: node.method_name, project_id: node.project_id, branch: node.branch})
-                WHERE n.method_name IS NOT NULL
-                DETACH DELETE n
-                """
+                if pull_request_id:
+                    # Delete method nodes by branch and pull_request_id
+                    delete_method_query = """
+                    UNWIND $nodes AS node
+                    MATCH (n {class_name: node.class_name, method_name: node.method_name, project_id: node.project_id, branch: node.branch, pull_request_id: node.pull_request_id})
+                    WHERE n.method_name IS NOT NULL
+                    DETACH DELETE n
+                    """
+                    # Add pull_request_id to each node for deletion
+                    for node in method_nodes_to_delete:
+                        node['pull_request_id'] = pull_request_id
+                else:
+                    # Delete method nodes by branch only (for main branch or when no pull_request_id)
+                    delete_method_query = """
+                    UNWIND $nodes AS node
+                    MATCH (n {class_name: node.class_name, method_name: node.method_name, project_id: node.project_id, branch: node.branch})
+                    WHERE n.method_name IS NOT NULL AND n.pull_request_id IS NULL
+                    DETACH DELETE n
+                    """
                 all_queries.append((delete_method_query, {'nodes': method_nodes_to_delete}))
             
-            # Create new nodes with duplicate checking against main_branch
-            if main_branch:
+            # Create new nodes with smart duplicate checking
+            if main_branch and base_branch:
+                batch_query = """
+                UNWIND $nodes AS node
+                // Tìm node tương ứng trong main_branch
+                OPTIONAL MATCH (main_node {
+                    class_name: node.class_name,
+                    project_id: node.project_id,
+                    branch: $main_branch,
+                    method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END
+                })
+                
+                // Tìm node tương ứng trong base_branch
+                OPTIONAL MATCH (base_node {
+                    class_name: node.class_name,
+                    project_id: node.project_id,
+                    branch: $base_branch,
+                    method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END
+                })
+                
+                // Điều kiện lọc - chỉ tạo node mới khi thỏa mãn các điều kiện
+                WITH node, main_node, base_node
+                WHERE 
+                    // ✅ TH1: Có base_branch, so sánh với base_branch
+                    (base_node IS NOT NULL AND node.content <> base_node.content)
+                    OR
+                    // ✅ TH2: Không có base_branch, so sánh với main_branch
+                    (base_node IS NULL AND main_node IS NOT NULL AND node.content <> main_node.content)
+                    OR
+                    // ✅ TH3: Node hoàn toàn mới - chưa tồn tại ở cả base và main
+                    (base_node IS NULL AND main_node IS NULL)
+                
+                // Tạo node mới
+                CALL apoc.create.node([node.node_type], {
+                    file_path: node.file_path,
+                    class_name: node.class_name,
+                    method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
+                    content: node.content,
+                    project_id: node.project_id,
+                    branch: node.branch,
+                    pull_request_id: CASE WHEN node.pull_request_id IS NOT NULL THEN node.pull_request_id ELSE null END
+                }) YIELD node AS created_node
+                RETURN count(created_node) AS created_count
+                """
+                all_queries.append((batch_query, {'nodes': node_data, 'main_branch': main_branch, 'base_branch': base_branch}))
+            elif main_branch:
+                # Fallback logic khi chỉ có main_branch
                 batch_query = """
                 UNWIND $nodes AS node
                 OPTIONAL MATCH (main_node {
@@ -141,7 +223,8 @@ class Neo4jService:
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
                     content: node.content,
                     project_id: node.project_id,
-                    branch: node.branch
+                    branch: node.branch,
+                    pull_request_id: CASE WHEN node.pull_request_id IS NOT NULL THEN node.pull_request_id ELSE null END
                 }) YIELD node AS created_node
                 RETURN count(created_node)
                 """
@@ -155,7 +238,8 @@ class Neo4jService:
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
                     content: node.content,
                     project_id: node.project_id,
-                    branch: node.branch
+                    branch: node.branch,
+                    pull_request_id: CASE WHEN node.pull_request_id IS NOT NULL THEN node.pull_request_id ELSE null END
                 }) YIELD node AS created_node
                 RETURN count(created_node)
                 """
@@ -211,17 +295,17 @@ class Neo4jService:
 
             if call_rels:
                 if main_branch:
-                    # If main_branch is provided, use fallback logic
+                    # Use base_branch first, then fallback to main_branch
                     call_query = """
                     UNWIND $relationships AS rel
                     MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
-                    OPTIONAL MATCH (target_current {method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
+                    OPTIONAL MATCH (target_base {method_name: rel.target_method, project_id: rel.project_id, branch: $base_branch})
                     OPTIONAL MATCH (target_main {method_name: rel.target_method, project_id: rel.project_id, branch: $main_branch})
-                    WITH source, COALESCE(target_current, target_main) AS target
+                    WITH source, COALESCE(target_base, target_main) AS target
                     WHERE target IS NOT NULL
                     MERGE (source)-[:CALL]->(target)
                     """
-                    all_queries.append((call_query, {'relationships': call_rels, 'main_branch': main_branch}))
+                    all_queries.append((call_query, {'relationships': call_rels, 'base_branch': base_branch, 'main_branch': main_branch}))
                 else:
                     call_query = """
                     UNWIND $relationships AS rel
@@ -237,21 +321,21 @@ class Neo4jService:
                     if main_branch:
                         class_implement_query = """
                         UNWIND $relationships AS rel
-                        OPTIONAL MATCH (source_current {class_name: rel.source_class, project_id: rel.project_id, branch: rel.branch})
-                        WHERE source_current.method_name IS NULL
+                        OPTIONAL MATCH (source_base {class_name: rel.source_class, project_id: rel.project_id, branch: $base_branch})
+                        WHERE source_base.method_name IS NULL
                         OPTIONAL MATCH (source_main {class_name: rel.source_class, project_id: rel.project_id, branch: $main_branch})
                         WHERE source_main.method_name IS NULL
-                        WITH rel, COALESCE(source_current, source_main) AS source
+                        WITH rel, COALESCE(source_base, source_main) AS source
                         WHERE source IS NOT NULL
-                        OPTIONAL MATCH (target_current {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
-                        WHERE target_current.method_name IS NULL
+                        OPTIONAL MATCH (target_base {class_name: rel.target_class, project_id: rel.project_id, branch: $base_branch})
+                        WHERE target_base.method_name IS NULL
                         OPTIONAL MATCH (target_main {class_name: rel.target_class, project_id: rel.project_id, branch: $main_branch})
                         WHERE target_main.method_name IS NULL
-                        WITH source, COALESCE(target_current, target_main) AS target
+                        WITH source, COALESCE(target_base, target_main) AS target
                         WHERE target IS NOT NULL
                         MERGE (source)-[:IMPLEMENT]->(target)
                         """
-                        all_queries.append((class_implement_query, {'relationships': class_implement_rels, 'main_branch': main_branch}))
+                        all_queries.append((class_implement_query, {'relationships': class_implement_rels, 'base_branch': base_branch, 'main_branch': main_branch}))
                     else:
                         class_implement_query = """
                         UNWIND $relationships AS rel
@@ -268,17 +352,17 @@ class Neo4jService:
                     if main_branch:
                         method_implement_query = """
                         UNWIND $relationships AS rel
-                        OPTIONAL MATCH (source_current {method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                        OPTIONAL MATCH (source_base {method_name: rel.source_method, project_id: rel.project_id, branch: $base_branch})
                         OPTIONAL MATCH (source_main {method_name: rel.source_method, project_id: rel.project_id, branch: $main_branch})
-                        WITH rel, COALESCE(source_current, source_main) AS source
+                        WITH rel, COALESCE(source_base, source_main) AS source
                         WHERE source IS NOT NULL
-                        OPTIONAL MATCH (target_current {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
+                        OPTIONAL MATCH (target_base {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: $base_branch})
                         OPTIONAL MATCH (target_main {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: $main_branch})
-                        WITH source, COALESCE(target_current, target_main) AS target
+                        WITH source, COALESCE(target_base, target_main) AS target
                         WHERE target IS NOT NULL
                         MERGE (source)-[:IMPLEMENT]->(target)
                         """
-                        all_queries.append((method_implement_query, {'relationships': method_implement_rels, 'main_branch': main_branch}))
+                        all_queries.append((method_implement_query, {'relationships': method_implement_rels, 'base_branch': base_branch, 'main_branch': main_branch}))
                     else:
                         method_implement_query = """
                         UNWIND $relationships AS rel
@@ -293,15 +377,15 @@ class Neo4jService:
                     use_query = """
                     UNWIND $relationships AS rel
                     MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
-                    OPTIONAL MATCH (target_current {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
-                    WHERE target_current.method_name IS NULL
+                    OPTIONAL MATCH (target_base {class_name: rel.target_class, project_id: rel.project_id, branch: $base_branch})
+                    WHERE target_base.method_name IS NULL
                     OPTIONAL MATCH (target_main {class_name: rel.target_class, project_id: rel.project_id, branch: $main_branch})
                     WHERE target_main.method_name IS NULL
-                    WITH source, COALESCE(target_current, target_main) AS target
+                    WITH source, COALESCE(target_base, target_main) AS target
                     WHERE target IS NOT NULL
                     MERGE (source)-[:USE]->(target)
                     """
-                    all_queries.append((use_query, {'relationships': use_rels, 'main_branch': main_branch}))
+                    all_queries.append((use_query, {'relationships': use_rels, 'base_branch': base_branch, 'main_branch': main_branch}))
                 else:
                     use_query = """
                     UNWIND $relationships AS rel
@@ -313,6 +397,31 @@ class Neo4jService:
                     all_queries.append((use_query, {'relationships': use_rels}))
 
         return all_queries
+
+    def delete_pull_request_nodes(self, project_id: int, pull_request_id: str):
+        """
+        Delete all nodes belonging to a specific pull request.
+        This is useful when a PR is closed or merged.
+        """
+        delete_query = """
+        MATCH (n {project_id: $project_id, pull_request_id: $pull_request_id})
+        DETACH DELETE n
+        RETURN count(n) as deleted_count
+        """
+        
+        try:
+            with self.db.driver.session() as session:
+                result = session.run(delete_query, {
+                    'project_id': str(project_id),
+                    'pull_request_id': pull_request_id
+                })
+                record = result.single()
+                deleted_count = record['deleted_count'] if record else 0
+                logger.info(f"Deleted {deleted_count} nodes for PR {pull_request_id} in project {project_id}")
+                return deleted_count
+        except Exception as e:
+            logger.error(f"Failed to delete PR nodes: {str(e)}")
+            raise e
 
     def execute_queries_batch(self, queries_with_params: List[Tuple[str, Dict]], max_retries: int = 3):
         with self.db.driver.session() as session:
@@ -328,9 +437,9 @@ class Neo4jService:
                         if retry_count >= max_retries:
                             raise e
 
-    def import_code_chunks(self, chunks: List[CodeChunk], batch_size: int = 50, main_branch: str = None):
+    def import_code_chunks(self, chunks: List[CodeChunk], batch_size: int = 50, main_branch: str = None, base_branch: str = None, pull_request_id: str = None):
         self.create_indexes()
-        queries_with_params = self.generate_cypher_from_chunks(chunks, batch_size, main_branch)
+        queries_with_params = self.generate_cypher_from_chunks(chunks, batch_size, main_branch, base_branch, pull_request_id)
         self.execute_queries_batch(queries_with_params)
 
     def import_code_chunks_with_branch_relations(
@@ -339,7 +448,9 @@ class Neo4jService:
         project_id: int,
         current_branch: str,
         main_branch: str,
-        batch_size: int = 50
+        base_branch: str = None,
+        batch_size: int = 50,
+        pull_request_id: str = None
     ):
         """
         Import code chunks and create BRANCH relationships to corresponding nodes in main branch.
@@ -356,7 +467,7 @@ class Neo4jService:
             batch_size: Batch size for queries
         """
         # Step 1: Import the chunks normally
-        self.import_code_chunks(chunks, batch_size, main_branch)
+        self.import_code_chunks(chunks, batch_size, main_branch, base_branch, pull_request_id)
         
         if not chunks:
             logger.info("No chunks to create branch relationships for")

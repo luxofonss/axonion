@@ -30,7 +30,9 @@ class BranchSnapshotService(BaseService):
         repo_path: str,
         branch_name: str,
         main_branch: str,
-        language: str = "java"
+        base_branch: str = None,
+        language: str = "java",
+        pull_request_id: str = None
     ) -> dict:
         
         # Step 1: Checkout the branch and get current commit hash
@@ -97,7 +99,9 @@ class BranchSnapshotService(BaseService):
                 chunks=chunks,
                 project_id=project_id,
                 current_branch=branch_name,
-                main_branch=main_branch
+                main_branch=main_branch,
+                base_branch=base_branch,
+                pull_request_id=pull_request_id
             )
             logger.info(
                 f"Imported {len(chunks)} chunks into Neo4j for branch '{branch_name}' "
@@ -190,8 +194,34 @@ class BranchSnapshotService(BaseService):
                 f"{len(related_nodes_set)} related nodes, "
                 f"{len(all_affected)} total affected nodes"
             )
+            
+            # Convert related nodes set to list of dicts
+            related_nodes = [
+                {
+                    'class_name': node[0],
+                    'method_name': node[1],
+                    'branch': node[2],
+                    'project_id': node[3]
+                }
+                for node in related_nodes_set
+            ]
+            
+            return {
+                'left_results': left_results,
+                'left_target_nodes': left_target_nodes,
+                'related_results': related_results,
+                'related_nodes': related_nodes,
+                'total_affected': len(all_affected)
+            }
         else:
             logger.info("No left target nodes found, skipping related nodes analysis")
+            return {
+                'left_results': left_results,
+                'left_target_nodes': left_target_nodes,
+                'related_results': [],
+                'related_nodes': [],
+                'total_affected': len(left_target_nodes)
+            }
 
     def get_branch_history(self, project_id: int, branch_name: str, limit: int = 10):
         """Get parsing history for a branch."""
@@ -208,4 +238,11 @@ class BranchSnapshotService(BaseService):
                 .limit(limit)
                 .all()
             )
+    
+    def delete_pull_request_nodes(self, project_id: int, pull_request_id: str):
+        """
+        Delete all nodes belonging to a specific pull request.
+        This is useful when a PR is closed or merged.
+        """
+        return self.neo4j_service.delete_pull_request_nodes(project_id, pull_request_id)
 

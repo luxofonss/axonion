@@ -49,13 +49,21 @@ container = app_creator.container
 
 def main():
     import uvicorn
+    import asyncio
+    import sys
+    
+    # Fix for Windows asyncio issues
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    
     """Entry point để chạy uvicorn server."""
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8080,
         reload=False,
-        log_level="info"
+        log_level="info",
+        loop="asyncio"
     )
 
 
