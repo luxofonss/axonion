@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
 from typing import List, Optional, Dict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from loguru import logger
 from tree_sitter import Language, Parser, Node
@@ -27,11 +28,11 @@ class ClassParsingContext:
 
 class BaseCodeAnalyzer(ABC):
 
-    def __init__(self, language: Language, parser: Parser, project_id: str, branch: str):
+    def __init__(self, language: Language, parser: Parser, project_id: str, branch: str, max_workers: int = 8):
         self.language = language
         self.parser = parser
         self.comment_remover = None
-        self.max_workers = 16
+        self.max_workers = max_workers
         self.project_id = project_id
         self.branch = branch
         self.cached_nodes = {}
@@ -39,7 +40,7 @@ class BaseCodeAnalyzer(ABC):
         self._lock = Lock()
         self.lsp_service: LSPService = None
 
-    def parse_project(self, root: Path, target_files: Optional[List[str]] = None, parse_all: bool = True) -> List[CodeChunk]:
+    def parse_project(self, root: Path, target_files: Optional[List[str]] = None, parse_all: bool = True, export_output: bool = True) -> List[CodeChunk]:
         logger.info(f"Starting analysis for project '{self.project_id}' at {root}")
 
         code_files = self._get_code_files(root)
@@ -49,17 +50,7 @@ class BaseCodeAnalyzer(ABC):
 
         # Filter files if parse_all is False and target_files is provided
         if not parse_all and target_files:
-            filtered_files = []
-            for code_file in code_files:
-                code_file_str = str(code_file).replace('\\', '/')
-                # Check if any target file path matches the end of this code file
-                for target in target_files:
-                    target_normalized = target.replace('\\', '/')
-                    if code_file_str.endswith(target_normalized):
-                        filtered_files.append(code_file)
-                        break
-            code_files = filtered_files
-            logger.info(f"Filtered to {len(code_files)} files based on target_files")
+            code_files = self._filter_files_by_targets(code_files, target_files)
 
         if not code_files:
             logger.warning("No files to process after filtering")
@@ -69,19 +60,32 @@ class BaseCodeAnalyzer(ABC):
         chunks: List[CodeChunk] = []
 
         # Build cache for all files (needed for cross-references)
-        self.build_source_cache(root)
+        self.build_source_cache(root, target_files)
 
-        # Process files sequentially
-        for i, file in enumerate(code_files, 1):
-            logger.debug(f"[{i}/{len(code_files)}] Processing file: {file}")
-
-            try:
-                file_chunks = self.process_file(file)
-                chunks.extend(file_chunks)
-            except Exception as e:
-                logger.error(f"Error processing {file}: {e}", exc_info=True)
+        # Process files in parallel using ThreadPoolExecutor
+        logger.info(f"Processing files with {self.max_workers} workers")
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all file processing tasks
+            future_to_file = {executor.submit(self.process_file, file): file for file in code_files}
+            
+            # Collect results as they complete
+            for i, future in enumerate(as_completed(future_to_file), 1):
+                file = future_to_file[future]
+                try:
+                    file_chunks = future.result()
+                    # Thread-safe append using lock
+                    with self._lock:
+                        chunks.extend(file_chunks)
+                    logger.debug(f"[{i}/{len(code_files)}] Completed processing: {file}")
+                except Exception as e:
+                    logger.error(f"Error processing {file}: {e}", exc_info=True)
 
         logger.info(f"Extracted {len(chunks)} code chunks total")
+
+        # Export to file if requested
+        if export_output:
+            output_path = Path("source_atlas/output") / str(self.project_id) / self.branch
+            self.export_chunks(chunks, output_path)
 
         # Return chunks; higher layers (services) will handle persistence/indexing
         return chunks
@@ -114,11 +118,16 @@ class BaseCodeAnalyzer(ABC):
                 class_name = self._extract_class_name(class_node, content)
                 package = self._extract_package(root_node, content)
                 full_class_name = self._build_full_class_name(class_name, package, class_node, content, root_node)
-                context = self.cached_nodes[full_class_name]
+                context = self.cached_nodes.get(full_class_name)
                 if not context:
                     return None
 
-                implements = self._extract_implements_with_lsp(class_node, file_path, content)
+                # Lazy evaluation: only compute implements if class is interface/abstract
+                # This avoids expensive LSP calls for regular classes
+                implements = []
+                if self._should_check_implements(class_node, content):
+                    implements = self._extract_implements_with_lsp(class_node, file_path, content)
+                
                 methods = self._extract_class_methods(
                     class_node, content, implements,
                     context.full_class_name, file_path, context.import_mapping
@@ -141,6 +150,14 @@ class BaseCodeAnalyzer(ABC):
         except Exception as e:
             logger.error(f"Error parsing class node: {e}")
             return None
+    
+    def _should_check_implements(self, class_node: Node, content: str) -> bool:
+        """
+        Determine if we should check for implementations.
+        Only check for interfaces and abstract classes to save LSP calls.
+        Override in subclasses for language-specific logic.
+        """
+        return True  # Default: always check (subclass can optimize)
 
     def _build_class_context(self, class_node: Node, content: str, root_node: Node) -> Optional[ClassParsingContext]:
         class_name = self._extract_class_name(class_node, content)
@@ -174,12 +191,21 @@ class BaseCodeAnalyzer(ABC):
                 return f.read()
 
     def export_chunks(self, chunks: List[CodeChunk], output_path: Path) -> None:
-
+        """Export chunks to JSON file"""
+        if not chunks:
+            logger.warning("No chunks to export")
+            return
+            
         logger.info(f"Exporting {len(chunks)} chunks to {output_path}")
         output_path.mkdir(parents=True, exist_ok=True)
+        
         chunks_data = [convert(c) for c in chunks]
-        with open(output_path / "chunks.json", "w", encoding="utf-8") as f:
+        chunks_file = output_path / "chunks.json"
+        
+        with open(chunks_file, "w", encoding="utf-8") as f:
             json.dump(chunks_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"✅ Exported {len(chunks)} chunks to: {chunks_file}")
 
     @abstractmethod
     def _get_code_files(self, root: Path) -> List[Path]:
@@ -229,21 +255,58 @@ class BaseCodeAnalyzer(ABC):
     def build_import_mapping(self, root_node: Node, content: str) -> Dict[str, str]:
         pass
 
-    def build_source_cache(self, root) -> Dict[str, ClassParsingContext]:
+    def _filter_files_by_targets(self, code_files: List[Path], target_files: Optional[List[str]]) -> List[Path]:
+        """
+        Filter code files based on target_files list.
+        Returns files where the code file path ends with one of the target file paths.
+        
+        Args:
+            code_files: List of all code files
+            target_files: List of target file paths to filter by
+            
+        Returns:
+            Filtered list of code files
+        """
+        if not target_files:
+            return code_files
+            
+        filtered_files = []
+        for code_file in code_files:
+            code_file_str = str(code_file).replace('\\', '/')
+            # Check if any target file path matches the end of this code file
+            for target in target_files:
+                target_normalized = target.replace('\\', '/')
+                if code_file_str.endswith(target_normalized):
+                    filtered_files.append(code_file)
+                    break
+        
+        logger.info(f"Filtered to {len(filtered_files)} files based on target_files")
+        return filtered_files
+
+    def build_source_cache(self, root, target_files: Optional[List[str]]) -> Dict[str, ClassParsingContext]:
+        # Get all code files and filter by target_files if provided
         code_files = self._get_code_files(root)
+        code_files = self._filter_files_by_targets(code_files, target_files)
         cached_nodes = {}
 
-        # Process files sequentially
-        for i, file in enumerate(code_files, 1):
-            logger.debug(f"[{i}/{len(code_files)}] Processing file: {file}")
-
-            try:
-                cache_data = self.process_class_cache_file(file)
-                cached_nodes.update(cache_data)
-            except Exception as e:
-                logger.error(f"Error processing {file}: {e}", exc_info=True)
+        # Process cache building in parallel for better performance
+        logger.info(f"Building source cache with {self.max_workers} workers")
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            future_to_file = {executor.submit(self.process_class_cache_file, file): file for file in code_files}
+            
+            for i, future in enumerate(as_completed(future_to_file), 1):
+                file = future_to_file[future]
+                try:
+                    cache_data = future.result()
+                    # Thread-safe update
+                    with self._lock:
+                        cached_nodes.update(cache_data)
+                    logger.debug(f"[{i}/{len(code_files)}] Cached: {file}")
+                except Exception as e:
+                    logger.error(f"Error caching {file}: {e}", exc_info=True)
 
         self.cached_nodes = cached_nodes
+        logger.info(f"Cache built with {len(cached_nodes)} classes")
         return cached_nodes
 
     def process_class_cache_file(self, file_path) -> Dict[str, ClassParsingContext]:

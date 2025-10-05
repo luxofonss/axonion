@@ -41,24 +41,36 @@ class Neo4jService:
                 except Exception as e:
                     logger.error(f"Error creating index: {str(e)}")
 
-    def generate_cypher_from_chunks(self, chunks: List[CodeChunk], batch_size: int = 100) -> List[Tuple[str, Dict]]:
+    def generate_cypher_from_chunks(self, chunks: List[CodeChunk], batch_size: int = 100, main_branch: str = None) -> List[Tuple[str, Dict]]:
         all_queries = []
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i:i+batch_size]
             node_data = []
+            class_nodes_to_delete = []
+            method_nodes_to_delete = []
+            
             for chunk in batch:
                 file_path = chunk.file_path
                 class_name = chunk.full_class_name
                 content = _escape_for_cypher(chunk.content)
                 node_type = "ConfigurationNode" if chunk.type == ChunkType.CONFIGURATION else "ClassNode"
+                
+                # Collect class node for deletion
+                class_nodes_to_delete.append({
+                    'class_name': class_name,
+                    'project_id': str(chunk.project_id),
+                    'branch': chunk.branch
+                })
+                
                 node_data.append({
                     'node_type': node_type,
                     'file_path': file_path,
                     'class_name': class_name,
                     'content': content,
-                    'project_id': chunk.project_id,
+                    'project_id': str(chunk.project_id),
                     'branch': chunk.branch
                 })
+                
                 for method in chunk.methods:
                     method_file_path = chunk.file_path
                     method_class_name = chunk.full_class_name
@@ -72,29 +84,82 @@ class Neo4jService:
                         method_node_type = "EndpointNode"
                     else:
                         method_node_type = "MethodNode"
+                    
+                    # Collect method node for deletion
+                    method_nodes_to_delete.append({
+                        'class_name': method_class_name,
+                        'method_name': method_name,
+                        'project_id': str(method.project_id),
+                        'branch': method.branch
+                    })
+                    
                     node_data.append({
                         'node_type': method_node_type,
                         'file_path': method_file_path,
                         'class_name': method_class_name,
                         'method_name': method_name,
                         'content': method_content,
-                        'project_id': method.project_id,
+                        'project_id': str(method.project_id),
                         'branch': method.branch
                     })
 
-            batch_query = """
-            UNWIND $nodes AS node
-            CALL apoc.create.node([node.node_type], {
-                file_path: node.file_path,
-                class_name: node.class_name,
-                method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
-                content: node.content,
-                project_id: node.project_id,
-                branch: node.branch
-            }) YIELD node AS created_node
-            RETURN count(created_node)
-            """
-            all_queries.append((batch_query, {'nodes': node_data}))
+            # Delete existing class nodes first
+            if class_nodes_to_delete:
+                delete_class_query = """
+                UNWIND $nodes AS node
+                MATCH (n {class_name: node.class_name, project_id: node.project_id, branch: node.branch})
+                WHERE n.method_name IS NULL
+                DETACH DELETE n
+                """
+                all_queries.append((delete_class_query, {'nodes': class_nodes_to_delete}))
+            
+            # Delete existing method nodes
+            if method_nodes_to_delete:
+                delete_method_query = """
+                UNWIND $nodes AS node
+                MATCH (n {class_name: node.class_name, method_name: node.method_name, project_id: node.project_id, branch: node.branch})
+                WHERE n.method_name IS NOT NULL
+                DETACH DELETE n
+                """
+                all_queries.append((delete_method_query, {'nodes': method_nodes_to_delete}))
+            
+            # Create new nodes with duplicate checking against main_branch
+            if main_branch:
+                batch_query = """
+                UNWIND $nodes AS node
+                OPTIONAL MATCH (main_node {
+                    class_name: node.class_name,
+                    project_id: node.project_id,
+                    branch: $main_branch,
+                    content: node.content,
+                    method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END
+                })
+                WHERE main_node IS NULL
+                CALL apoc.create.node([node.node_type], {
+                    file_path: node.file_path,
+                    class_name: node.class_name,
+                    method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
+                    content: node.content,
+                    project_id: node.project_id,
+                    branch: node.branch
+                }) YIELD node AS created_node
+                RETURN count(created_node)
+                """
+                all_queries.append((batch_query, {'nodes': node_data, 'main_branch': main_branch}))
+            else:
+                batch_query = """
+                UNWIND $nodes AS node
+                CALL apoc.create.node([node.node_type], {
+                    file_path: node.file_path,
+                    class_name: node.class_name,
+                    method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
+                    content: node.content,
+                    project_id: node.project_id,
+                    branch: node.branch
+                }) YIELD node AS created_node
+                RETURN count(created_node)
+                """
+                all_queries.append((batch_query, {'nodes': node_data}))
 
         # Relationships
         for i in range(0, len(chunks), batch_size):
@@ -104,7 +169,7 @@ class Neo4jService:
             use_rels = []
             for chunk in batch:
                 chunk_class_name = chunk.full_class_name
-                chunk_project_id = chunk.project_id
+                chunk_project_id = str(chunk.project_id)
                 chunk_branch = chunk.branch
                 for impl in chunk.implements:
                     implement_rels.append({
@@ -145,46 +210,107 @@ class Neo4jService:
                             })
 
             if call_rels:
-                call_query = """
-                UNWIND $relationships AS rel
-                MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
-                MATCH (target {method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
-                MERGE (source)-[:CALL]->(target)
-                """
-                all_queries.append((call_query, {'relationships': call_rels}))
+                if main_branch:
+                    # If main_branch is provided, use fallback logic
+                    call_query = """
+                    UNWIND $relationships AS rel
+                    MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                    OPTIONAL MATCH (target_current {method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
+                    OPTIONAL MATCH (target_main {method_name: rel.target_method, project_id: rel.project_id, branch: $main_branch})
+                    WITH source, COALESCE(target_current, target_main) AS target
+                    WHERE target IS NOT NULL
+                    MERGE (source)-[:CALL]->(target)
+                    """
+                    all_queries.append((call_query, {'relationships': call_rels, 'main_branch': main_branch}))
+                else:
+                    call_query = """
+                    UNWIND $relationships AS rel
+                    MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                    MATCH (target {method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
+                    MERGE (source)-[:CALL]->(target)
+                    """
+                    all_queries.append((call_query, {'relationships': call_rels}))
 
             if implement_rels:
                 class_implement_rels = [rel for rel in implement_rels if 'source_method' not in rel]
                 if class_implement_rels:
-                    class_implement_query = """
-                    UNWIND $relationships AS rel
-                    MATCH (source {class_name: rel.source_class, project_id: rel.project_id, branch: rel.branch})
-                    WHERE source.method_name IS NULL
-                    MATCH (target {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
-                    WHERE target.method_name IS NULL
-                    MERGE (source)-[:IMPLEMENT]->(target)
-                    """
-                    all_queries.append((class_implement_query, {'relationships': class_implement_rels}))
+                    if main_branch:
+                        class_implement_query = """
+                        UNWIND $relationships AS rel
+                        OPTIONAL MATCH (source_current {class_name: rel.source_class, project_id: rel.project_id, branch: rel.branch})
+                        WHERE source_current.method_name IS NULL
+                        OPTIONAL MATCH (source_main {class_name: rel.source_class, project_id: rel.project_id, branch: $main_branch})
+                        WHERE source_main.method_name IS NULL
+                        WITH rel, COALESCE(source_current, source_main) AS source
+                        WHERE source IS NOT NULL
+                        OPTIONAL MATCH (target_current {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
+                        WHERE target_current.method_name IS NULL
+                        OPTIONAL MATCH (target_main {class_name: rel.target_class, project_id: rel.project_id, branch: $main_branch})
+                        WHERE target_main.method_name IS NULL
+                        WITH source, COALESCE(target_current, target_main) AS target
+                        WHERE target IS NOT NULL
+                        MERGE (source)-[:IMPLEMENT]->(target)
+                        """
+                        all_queries.append((class_implement_query, {'relationships': class_implement_rels, 'main_branch': main_branch}))
+                    else:
+                        class_implement_query = """
+                        UNWIND $relationships AS rel
+                        MATCH (source {class_name: rel.source_class, project_id: rel.project_id, branch: rel.branch})
+                        WHERE source.method_name IS NULL
+                        MATCH (target {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
+                        WHERE target.method_name IS NULL
+                        MERGE (source)-[:IMPLEMENT]->(target)
+                        """
+                        all_queries.append((class_implement_query, {'relationships': class_implement_rels}))
 
                 method_implement_rels = [rel for rel in implement_rels if 'source_method' in rel]
                 if method_implement_rels:
-                    method_implement_query = """
-                    UNWIND $relationships AS rel
-                    MATCH (source {method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
-                    MATCH (target {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
-                    MERGE (source)-[:IMPLEMENT]->(target)
-                    """
-                    all_queries.append((method_implement_query, {'relationships': method_implement_rels}))
+                    if main_branch:
+                        method_implement_query = """
+                        UNWIND $relationships AS rel
+                        OPTIONAL MATCH (source_current {method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                        OPTIONAL MATCH (source_main {method_name: rel.source_method, project_id: rel.project_id, branch: $main_branch})
+                        WITH rel, COALESCE(source_current, source_main) AS source
+                        WHERE source IS NOT NULL
+                        OPTIONAL MATCH (target_current {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
+                        OPTIONAL MATCH (target_main {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: $main_branch})
+                        WITH source, COALESCE(target_current, target_main) AS target
+                        WHERE target IS NOT NULL
+                        MERGE (source)-[:IMPLEMENT]->(target)
+                        """
+                        all_queries.append((method_implement_query, {'relationships': method_implement_rels, 'main_branch': main_branch}))
+                    else:
+                        method_implement_query = """
+                        UNWIND $relationships AS rel
+                        MATCH (source {method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                        MATCH (target {class_name: rel.target_class, method_name: rel.target_method, project_id: rel.project_id, branch: rel.branch})
+                        MERGE (source)-[:IMPLEMENT]->(target)
+                        """
+                        all_queries.append((method_implement_query, {'relationships': method_implement_rels}))
 
             if use_rels:
-                use_query = """
-                UNWIND $relationships AS rel
-                MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
-                MATCH (target {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
-                WHERE target.method_name IS NULL
-                MERGE (source)-[:USE]->(target)
-                """
-                all_queries.append((use_query, {'relationships': use_rels}))
+                if main_branch:
+                    use_query = """
+                    UNWIND $relationships AS rel
+                    MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                    OPTIONAL MATCH (target_current {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
+                    WHERE target_current.method_name IS NULL
+                    OPTIONAL MATCH (target_main {class_name: rel.target_class, project_id: rel.project_id, branch: $main_branch})
+                    WHERE target_main.method_name IS NULL
+                    WITH source, COALESCE(target_current, target_main) AS target
+                    WHERE target IS NOT NULL
+                    MERGE (source)-[:USE]->(target)
+                    """
+                    all_queries.append((use_query, {'relationships': use_rels, 'main_branch': main_branch}))
+                else:
+                    use_query = """
+                    UNWIND $relationships AS rel
+                    MATCH (source {class_name: rel.source_class, method_name: rel.source_method, project_id: rel.project_id, branch: rel.branch})
+                    MATCH (target {class_name: rel.target_class, project_id: rel.project_id, branch: rel.branch})
+                    WHERE target.method_name IS NULL
+                    MERGE (source)-[:USE]->(target)
+                    """
+                    all_queries.append((use_query, {'relationships': use_rels}))
 
         return all_queries
 
@@ -202,9 +328,9 @@ class Neo4jService:
                         if retry_count >= max_retries:
                             raise e
 
-    def import_code_chunks(self, chunks: List[CodeChunk], batch_size: int = 50):
+    def import_code_chunks(self, chunks: List[CodeChunk], batch_size: int = 50, main_branch: str = None):
         self.create_indexes()
-        queries_with_params = self.generate_cypher_from_chunks(chunks, batch_size)
+        queries_with_params = self.generate_cypher_from_chunks(chunks, batch_size, main_branch)
         self.execute_queries_batch(queries_with_params)
 
     def import_code_chunks_with_branch_relations(
@@ -230,7 +356,7 @@ class Neo4jService:
             batch_size: Batch size for queries
         """
         # Step 1: Import the chunks normally
-        self.import_code_chunks(chunks, batch_size)
+        self.import_code_chunks(chunks, batch_size, main_branch)
         
         if not chunks:
             logger.info("No chunks to create branch relationships for")
@@ -277,7 +403,7 @@ class Neo4jService:
                 # Class-level node
                 class_nodes.append({
                     'class_name': chunk.full_class_name,
-                    'project_id': project_id,
+                    'project_id': str(project_id),
                     'current_branch': current_branch,
                     'main_branch': main_branch
                 })
@@ -287,7 +413,7 @@ class Neo4jService:
                     method_nodes.append({
                         'class_name': chunk.full_class_name,
                         'method_name': method.name,
-                        'project_id': project_id,
+                        'project_id': str(project_id),
                         'current_branch': current_branch,
                         'main_branch': main_branch
                     })
@@ -336,3 +462,190 @@ class Neo4jService:
         
         return all_queries
 
+    def get_related_nodes(
+        self,
+        target_nodes: List[Dict[str, str]],
+        max_level: int = 20,
+        relationship_filter: str = "CALL>|<IMPLEMENT|<EXTEND|USE>",
+        min_level: int = 0
+    ) -> List[Dict]:
+        """
+        Get all nodes related to a list of target nodes by traversing relationships.
+        
+        Args:
+            target_nodes: List of target nodes, each dict should have:
+                - class_name: str
+                - method_name: str | None
+                - branch: str
+                - project_id: str
+            max_level: Maximum traversal depth (default: 20)
+            relationship_filter: Relationship filter for APOC (default: "CALL>|<IMPLEMENT|<EXTEND|USE>")
+            min_level: Minimum traversal depth (default: 0)
+            
+        Returns:
+            List of dicts containing:
+                - endpoint: The starting node
+                - path: The full path traversed
+                - visited_nodes: List of filtered nodes based on relationship rules
+        """
+        query = """
+        WITH $targets AS targets
+        
+        MATCH (endpoint)
+        WHERE endpoint.project_id = $targets[0].project_id
+        AND any(t IN targets WHERE
+          t.class_name = endpoint.class_name AND
+          t.branch = endpoint.branch AND
+          (
+            (t.method_name IS NULL AND endpoint.method_name IS NULL)
+            OR (t.method_name = endpoint.method_name)
+          )
+        )
+        
+        CALL apoc.path.expandConfig(endpoint, {
+          relationshipFilter: $relationship_filter,
+          minLevel: $min_level,
+          maxLevel: $max_level,
+          bfs: true,
+          uniqueness: "NODE_GLOBAL",
+          filterStartNode: false
+        }) YIELD path
+        
+        WITH endpoint, path,
+             nodes(path) AS node_list,
+             relationships(path) AS rel_list
+        
+        WITH endpoint, path, node_list, rel_list,
+             [i IN range(0, size(rel_list)-1) |
+                CASE
+                  WHEN type(rel_list[i]) = 'CALL'
+                       AND node_list[i+1].method_name IS NOT NULL
+                  THEN node_list[i+1]
+                  
+                  WHEN type(rel_list[i]) IN ['IMPLEMENT', 'EXTEND']
+                  THEN node_list[i+1]
+                  
+                  WHEN type(rel_list[i]) = 'USE'
+                       AND node_list[i+1].method_name IS NULL
+                  THEN node_list[i+1]
+                  ELSE null
+                END
+             ] AS filtered_nodes
+        
+        RETURN endpoint, path,
+               [node IN filtered_nodes WHERE node IS NOT NULL] AS visited_nodes
+        ORDER BY path
+        """
+        
+        params = {
+            'targets': target_nodes,
+            'relationship_filter': relationship_filter,
+            'min_level': min_level,
+            'max_level': max_level
+        }
+        
+        with self.db.driver.session() as session:
+            result = session.run(query, params)
+            return [
+                {
+                    'endpoint': dict(record['endpoint']),
+                    'path': record['path'],
+                    'visited_nodes': [dict(node) for node in record['visited_nodes']]
+                }
+                for record in result
+            ]
+
+    def get_left_target_nodes(
+        self,
+        target_nodes: List[Dict[str, str]],
+        max_level: int = 20,
+        relationship_filter: str = "<CALL|IMPLEMENT>|EXTEND>|<USE",
+        min_level: int = 0
+    ) -> List[Dict]:
+        """
+        Get all left target nodes (incoming relationships) for a list of target nodes.
+        
+        This traverses relationships in reverse to find nodes that call, implement, extend, or use the target nodes.
+        
+        Args:
+            target_nodes: List of target nodes, each dict should have:
+                - class_name: str
+                - method_name: str | None
+                - branch: str
+                - project_id: str
+            max_level: Maximum traversal depth (default: 20)
+            relationship_filter: Relationship filter for APOC (default: "<CALL|IMPLEMENT>|EXTEND>|<USE")
+            min_level: Minimum traversal depth (default: 0)
+            
+        Returns:
+            List of dicts containing:
+                - endpoint: The starting node
+                - path: The full path traversed
+                - visited_nodes: List of filtered nodes based on relationship rules
+        """
+        query = """
+        WITH $targets AS targets
+        
+        MATCH (endpoint)
+        WHERE endpoint.project_id = $targets[0].project_id
+        AND any(t IN targets WHERE
+          t.class_name = endpoint.class_name AND
+          t.branch = endpoint.branch AND
+          (
+            (t.method_name IS NULL AND endpoint.method_name IS NULL)
+            OR (t.method_name = endpoint.method_name)
+          )
+        )
+        
+        CALL apoc.path.expandConfig(endpoint, {
+          relationshipFilter: $relationship_filter,
+          minLevel: $min_level,
+          maxLevel: $max_level,
+          bfs: true,
+          uniqueness: "NODE_GLOBAL",
+          filterStartNode: false
+        }) YIELD path
+        
+        WITH endpoint, path,
+             nodes(path) AS node_list,
+             relationships(path) AS rel_list
+        
+        WITH endpoint, path, node_list, rel_list,
+             [i IN range(0, size(rel_list)-1) |
+                CASE
+                  WHEN type(rel_list[i]) = 'CALL'
+                       AND node_list[i+1].method_name IS NOT NULL
+                  THEN node_list[i+1]
+                  
+                  WHEN type(rel_list[i]) IN ['IMPLEMENT', 'EXTEND']
+                  THEN node_list[i+1]
+                  
+                  WHEN type(rel_list[i]) = 'USE'
+                       AND node_list[i+1].method_name IS NULL
+                  THEN node_list[i+1]
+                  ELSE null
+                END
+             ] AS filtered_nodes
+        
+        RETURN endpoint, path,
+               [node IN filtered_nodes WHERE node IS NOT NULL] AS visited_nodes
+        ORDER BY path
+        """
+        
+        params = {
+            'targets': target_nodes,
+            'relationship_filter': relationship_filter,
+            'min_level': min_level,
+            'max_level': max_level
+        }
+        
+        with self.db.driver.session() as session:
+            result = session.run(query, params)
+            return [
+                {
+                    'endpoint': dict(record['endpoint']),
+                    'path': record['path'],
+                    'visited_nodes': [dict(node) for node in record['visited_nodes']]
+                }
+                for record in result
+            ]

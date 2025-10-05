@@ -260,27 +260,70 @@ class GitHubWebhookService:
                     # This is the baseline for diff comparison, NOT the PR's base_branch
                     # Example: PR from feature-branch -> develop, but we compare both against 'main'
                     
-                    # Parse base branch (likely cached!)
+                    # Parse base branch if it not merged to main branch yet
                     logger.info(f"Parsing PR base branch '{base_branch}' (comparing to main: '{found_project.main_branch}')")
                     base_result = branch_snapshot_service.parse_branch_if_needed(
                         project_id=found_project.id,
-                        project_name=found_project.name,
                         repo_path=repo_path,
                         branch_name=base_branch,
                         main_branch=found_project.main_branch,  # Project's main branch, NOT PR base!
                         language=language
                     )
+
+                            # Step 5.1: Prepare target nodes from chunks
+                    for chunk in base_result['chunks']:
+                        # Add class node
+                        base_result['target_nodes'].append({
+                            'class_name': chunk.full_class_name,
+                            'method_name': None,
+                            'branch': base_branch,
+                            'project_id': str(found_project.id)
+                        })
+                        # Add method nodes
+                        for method in chunk.methods:
+                            base_result['target_nodes'].append({
+                                'class_name': chunk.full_class_name,
+                                'method_name': method.name,
+                                'branch': base_branch,
+                                'project_id': str(found_project.id)
+                            })
                     
-                    # Parse head branch (likely new)
+                    logger.info(f"Prepared {len(base_result['target_nodes'])} target nodes for analysis")
+                    
+                    # Parse head branch with base branch to compare diff
                     logger.info(f"Parsing PR head branch '{head_branch}' (comparing to main: '{found_project.main_branch}')")
                     head_result = branch_snapshot_service.parse_branch_if_needed(
                         project_id=found_project.id,
-                        project_name=found_project.name,
                         repo_path=repo_path,
                         branch_name=head_branch,
-                        main_branch=found_project.main_branch,  # Project's main branch, NOT PR base!
+                        main_branch=base_branch,
                         language=language
                     )
+
+                    # Step 5.1: Prepare target nodes from chunks
+                    for chunk in head_result['chunks']:
+                        # Add class node
+                        head_result['target_nodes'].append({
+                            'class_name': chunk.full_class_name,
+                            'method_name': None,
+                            'branch': head_branch,
+                            'project_id': str(found_project.id)
+                        })
+                        # Add method nodes
+                        for method in chunk.methods:
+                            head_result['target_nodes'].append({
+                                'class_name': chunk.full_class_name,
+                                'method_name': method.name,
+                                'branch': head_branch,
+                                'project_id': str(found_project.id)
+                            })
+                    
+                    logger.info(f"Prepared {len(head_result['target_nodes'])} target nodes for analysis")
+
+                    # we have to check if target node's in head_branch content different from base_branch
+                    # if not different then not insert to neo4j
+                    left_results = branch_snapshot_service.get_brach_diff_nodes(head_result['target_nodes'])
+                    related_results = branch_snapshot_service.get_related_nodes(left_results)
                     
                     logger.info(
                         f"Branch parsing complete - "
@@ -302,6 +345,8 @@ class GitHubWebhookService:
                 "pr_files_name": pr_files_name,
                 "base_branch_result": base_result,
                 "head_branch_result": head_result,
+                "left_results": left_results,
+                "related_results": related_results
             }
             
         except HTTPException:

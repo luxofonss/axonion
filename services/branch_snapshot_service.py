@@ -27,7 +27,6 @@ class BranchSnapshotService(BaseService):
     def parse_branch_if_needed(
         self,
         project_id: int,
-        project_name: str,
         repo_path: str,
         branch_name: str,
         main_branch: str,
@@ -54,6 +53,7 @@ class BranchSnapshotService(BaseService):
                 "commit_hash": current_commit,
                 "chunk_count": existing_snapshot.chunk_count,
                 "file_count": existing_snapshot.file_count,
+                "chunks": []
             }
         
         # Step 3: Determine which files to parse
@@ -79,6 +79,7 @@ class BranchSnapshotService(BaseService):
                 "commit_hash": current_commit,
                 "chunk_count": 0,
                 "file_count": 0,
+                "chunks": []
             }
 
         from source_atlas.analyzers.analyzer_factory import AnalyzerFactory
@@ -91,7 +92,6 @@ class BranchSnapshotService(BaseService):
                 parse_all=False,
             )
         
-        # Step 5: Import chunks into Neo4j with cross-branch relationships
         if chunks:
             self.neo4j_service.import_code_chunks_with_branch_relations(
                 chunks=chunks,
@@ -125,7 +125,73 @@ class BranchSnapshotService(BaseService):
             "commit_hash": current_commit,
             "chunk_count": len(chunks),
             "file_count": len(files_to_parse) if files_to_parse else 0,
+            "chunks": chunks
         }
+
+    def get_brach_diff_nodes(self, target_nodes):
+        logger.info("Analyzing left target nodes (incoming dependencies)...")
+        left_results = self.neo4j_service.get_left_target_nodes(
+            target_nodes=target_nodes,
+            max_level=20
+        )
+        
+        # Extract unique left target nodes
+        left_target_nodes_set = set()
+        for result in left_results:
+            for node in result['visited_nodes']:
+                node_key = (
+                    node.get('class_name'),
+                    node.get('method_name'),
+                    node.get('branch'),
+                    node.get('project_id')
+                )
+                left_target_nodes_set.add(node_key)
+        
+        # Convert to list of dicts
+        left_target_nodes = [
+            {
+                'class_name': node[0],
+                'method_name': node[1],
+                'branch': node[2],
+                'project_id': node[3]
+            }
+            for node in left_target_nodes_set
+        ]
+        
+        logger.info(f"Found {len(left_target_nodes)} unique left target nodes")
+        
+        # Step 5.3: Get related nodes (outgoing dependencies from left targets)
+        if left_target_nodes:
+            logger.info("Analyzing related nodes (outgoing dependencies)...")
+            related_results = self.neo4j_service.get_related_nodes(
+                target_nodes=left_target_nodes,
+                max_level=20
+            )
+            
+            # Extract unique related nodes
+            related_nodes_set = set()
+            for result in related_results:
+                for node in result['visited_nodes']:
+                    node_key = (
+                        node.get('class_name'),
+                        node.get('method_name'),
+                        node.get('branch'),
+                        node.get('project_id')
+                    )
+                    related_nodes_set.add(node_key)
+            
+            logger.info(f"Found {len(related_nodes_set)} unique related nodes")
+            
+            # Calculate total affected nodes
+            all_affected = left_target_nodes_set.union(related_nodes_set)
+            logger.info(
+                f"Impact analysis complete: "
+                f"{len(left_target_nodes)} nodes depend on changes, "
+                f"{len(related_nodes_set)} related nodes, "
+                f"{len(all_affected)} total affected nodes"
+            )
+        else:
+            logger.info("No left target nodes found, skipping related nodes analysis")
 
     def get_branch_history(self, project_id: int, branch_name: str, limit: int = 10):
         """Get parsing history for a branch."""

@@ -229,11 +229,11 @@ class JavaCodeAnalyzerConstant:
 
 class JavaCodeAnalyzer(BaseCodeAnalyzer):
 
-    def __init__(self, root_path: str = None, project_id: str = None, branch: str = None):
+    def __init__(self, root_path: str = None, project_id: str = None, branch: str = None, max_workers: int = 8):
         # Tree-sitter setup
         language: Language = get_language("java")
         parser = Parser(language)
-        super().__init__(language, parser, project_id, branch)
+        super().__init__(language, parser, project_id, branch, max_workers)
 
         # Services
         self.comment_remover = JavaCommentRemover()
@@ -371,23 +371,34 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
                 return child
         return None
 
+    def _should_check_implements(self, class_node: Node, content: str) -> bool:
+        """
+        Only check implements for interfaces and abstract classes.
+        This optimization avoids expensive LSP calls for regular classes.
+        """
+        # Check if it's an interface
+        if class_node.type == 'interface_declaration':
+            return True
+        
+        # Check if it's an abstract class
+        for child in class_node.children:
+            if child.type == 'modifiers':
+                text_modifiers = extract_content(child, content)
+                if 'abstract' in text_modifiers:
+                    return True
+        
+        return False
+    
     def _extract_implements_with_lsp(self, class_node: Node, file_path: str, content: str) -> List[str]:
         if not self.lsp_service:
             return []
 
         try:
             class_name_node = None
-            is_interface = False
-            if class_node.type == 'interface_declaration':
-                is_interface = True
             for child in class_node.children:
-                if not is_interface:
-                    if child.type == 'modifiers':
-                        text_modifiers = extract_content(child, content)
-                        if ' abstract' not in text_modifiers:
-                            return []
                 if child.type == 'identifier':
                     class_name_node = child
+                    break
 
             if not class_name_node:
                 return []
@@ -601,9 +612,11 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
 
             endpoint = self.endpoint_extractor.extract_from_method(method_node, content, class_node)
 
-            # Build inheritance info
-            inheritance_info = self._build_inheritance_info(method_node, method_name_node,
-                                                            file_path) if implements else []
+            # Lazy evaluation: only check inheritance for methods without body (abstract/interface methods)
+            inheritance_info = []
+            if implements and self._should_check_inheritance(method_node):
+                inheritance_info = self._build_inheritance_info(method_node, method_name_node, file_path)
+            
             is_configuration = self._is_config_node(method_node, content)
 
             method_type = ChunkType.REGULAR
@@ -898,11 +911,17 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         return field
 
     # Inheritance Analysis
-    def _build_inheritance_info(self, method_node: Node, method_name_node: Node, file_path: str) -> List[str]:
+    def _should_check_inheritance(self, method_node: Node) -> bool:
+        """
+        Only check inheritance for methods without body (abstract/interface methods).
+        This optimization avoids expensive LSP calls for regular methods.
+        """
         for child in method_node.children:
-            if child.type == 'body':
-                return []
-
+            if child.type == 'block' or child.type == 'constructor_body':
+                return False
+        return True
+    
+    def _build_inheritance_info(self, method_node: Node, method_name_node: Node, file_path: str) -> List[str]:
         line = method_name_node.start_point[0]
         col = method_name_node.start_point[1]
         logger.info(f'request_implementation {file_path}, {line}, {col}')

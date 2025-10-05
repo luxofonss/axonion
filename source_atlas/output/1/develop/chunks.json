@@ -1,0 +1,857 @@
+[
+  {
+    "package": "com.edu.onestudy.repository.impl",
+    "class_name": "QuizAnswerRepositoryImpl",
+    "full_class_name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\repository\\impl\\QuizAnswerRepositoryImpl.java",
+    "content": "@Repository\npublic class QuizAnswerRepositoryImpl implements QuizAnswerRepository {\n\n    private final JpaQuizAnswerRepository repository;\n\n    public QuizAnswerRepositoryImpl(JpaQuizAnswerRepository repository) {\n        this.repository = repository;\n    }\n\n    @Override\n    public QuizAnswer save(QuizAnswer answer) {\n        return repository.save(answer);\n    }\n\n    @Override\n    public void saveAll(List<QuizAnswer> answers) {\n        repository.saveAll(answers);\n    }\n\n    @Override\n    public Optional<QuizAnswer> findById(String id) {\n        return repository.findById(UUID.fromString(id));\n    }\n\n    @Override\n    public List<QuizAnswer> findByQuizAttemptId(String attemptId) {\n        \n        return repository.findByQuizAttemptId(UUID.fromString(attemptId));\n    }\n\n    @Override\n    public void delete(QuizAnswer oldAnswer) {\n        repository.delete(oldAnswer);\n    }\n}",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.save(QuizAnswer answer)",
+        "body": "@Override\n    public QuizAnswer save(QuizAnswer answer) {\n        return repository.save(answer);\n    }",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.saveAll(List<QuizAnswer> answers)",
+        "body": "@Override\n    public void saveAll(List<QuizAnswer> answers) {\n        repository.saveAll(answers);\n    }",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.findById(String id)",
+        "body": "@Override\n    public Optional<QuizAnswer> findById(String id) {\n        return repository.findById(UUID.fromString(id));\n    }",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.findByQuizAttemptId(String attemptId)",
+        "body": "@Override\n    public List<QuizAnswer> findByQuizAttemptId(String attemptId) {\n        \n        return repository.findByQuizAttemptId(UUID.fromString(attemptId));\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.impl.JpaQuizAnswerRepository.findByQuizAttemptId(UUID quizAttemptId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.delete(QuizAnswer oldAnswer)",
+        "body": "@Override\n    public void delete(QuizAnswer oldAnswer) {\n        repository.delete(oldAnswer);\n    }",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.edu.onestudy.service.test",
+    "class_name": "ResourceServiceImpl",
+    "full_class_name": "com.edu.onestudy.service.test.ResourceServiceImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\test\\ResourceServiceImpl.java",
+    "content": "@Service\n@Slf4j\npublic class ResourceServiceImpl {\n\n    private final ResourceRepository resourceRepository;\n\n    private final StorageService storageService;\n\n    public ResourceServiceImpl(StorageFactory storageFactory, ResourceRepository resourceRepository) {\n        this.resourceRepository = resourceRepository;\n        this.storageService = storageFactory.getStorageService(Constant.STORAGE_AWS);\n    }\n\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n        List<Resource> lst = new ArrayList<>();\n        List<String> test2 = lst.stream().map(Resource::getId).map(UUID::toString).collect(Collectors.toList());\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }\n\n}",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.service.test.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)",
+        "body": "public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n        List<Resource> lst = new ArrayList<>();\n        List<String> test2 = lst.stream().map(Resource::getId).map(UUID::toString).collect(Collectors.toList());\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.ResourceRepository.save(Resource resource)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Resource"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.edu.onestudy.service.impl",
+    "class_name": "ResourceServiceImpl",
+    "full_class_name": "com.edu.onestudy.service.impl.ResourceServiceImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\impl\\ResourceServiceImpl.java",
+    "content": "@Service\n@Slf4j\npublic class ResourceServiceImpl implements ResourceService {\n\n    private final ResourceRepository resourceRepository;\n\n    private final StorageService storageService;\n\n    public ResourceServiceImpl(StorageFactory storageFactory, ResourceRepository resourceRepository) {\n        this.resourceRepository = resourceRepository;\n        this.storageService = storageFactory.getStorageService(Constant.STORAGE_AWS);\n    }\n\n    @Override\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }\n\n    @Override\n    public GetResourceResponse getResource(String id, UUID requestId) {\n        Resource resource = resourceRepository.findById(requestId.toString());\n\n        if (Objects.isNull(resource)) {\n            throw new RuntimeException(\"Resource not found\");\n        }\n\n        try {\n            if (!requestId.equals(resource.getOwnerId())) {\n                throw new RuntimeException(\"You are not allowed to access this resource\");\n            }\n\n            String url = storageService.getFileUrl(resource.getUrl());\n\n            return GetResourceResponse.builder()\n                    .name(resource.getName())\n                    .url(url)\n                    .build();\n\n        } catch (Exception e) {\n            log.info(\"Generate url failed {}\", e.getMessage());\n            throw new RuntimeException(\"Generate url failed\");\n        }\n    }\n\n    @Override\n    public File downloadResourceFromUrl(String urlString) {\n        try {\n            URI uri = URI.create(urlString);\n            URL url = uri.toURL();\n\n            String fileName = Path.of(uri.getPath()).getFileName().toString();\n            File outputFile = File.createTempFile(\"download_\", \"_\" + fileName);\n\n            try (InputStream in = url.openStream();\n                 FileOutputStream out = new FileOutputStream(outputFile)) {\n                byte[] buffer = new byte[8192];\n                int bytesRead;\n                while ((bytesRead = in.read(buffer)) != -1) {\n                    out.write(buffer, 0, bytesRead);\n                }\n            }\n\n            return outputFile;\n\n        } catch (IOException e) {\n            throw new RuntimeException(\"Failed to download file from URL: \" + urlString, e);\n        }\n    }\n}",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)",
+        "body": "@Override\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.ResourceRepository.save(Resource resource)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Resource"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.getResource(String id, UUID requestId)",
+        "body": "@Override\n    public GetResourceResponse getResource(String id, UUID requestId) {\n        Resource resource = resourceRepository.findById(requestId.toString());\n\n        if (Objects.isNull(resource)) {\n            throw new RuntimeException(\"Resource not found\");\n        }\n\n        try {\n            if (!requestId.equals(resource.getOwnerId())) {\n                throw new RuntimeException(\"You are not allowed to access this resource\");\n            }\n\n            String url = storageService.getFileUrl(resource.getUrl());\n\n            return GetResourceResponse.builder()\n                    .name(resource.getName())\n                    .url(url)\n                    .build();\n\n        } catch (Exception e) {\n            log.info(\"Generate url failed {}\", e.getMessage());\n            throw new RuntimeException(\"Generate url failed\");\n        }\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.ResourceRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getFileUrl(String fileName)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.dto.resource.GetResourceResponse",
+          "com.edu.onestudy.entity.Resource"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.downloadResourceFromUrl(String urlString)",
+        "body": "@Override\n    public File downloadResourceFromUrl(String urlString) {\n        try {\n            URI uri = URI.create(urlString);\n            URL url = uri.toURL();\n\n            String fileName = Path.of(uri.getPath()).getFileName().toString();\n            File outputFile = File.createTempFile(\"download_\", \"_\" + fileName);\n\n            try (InputStream in = url.openStream();\n                 FileOutputStream out = new FileOutputStream(outputFile)) {\n                byte[] buffer = new byte[8192];\n                int bytesRead;\n                while ((bytesRead = in.read(buffer)) != -1) {\n                    out.write(buffer, 0, bytesRead);\n                }\n            }\n\n            return outputFile;\n\n        } catch (IOException e) {\n            throw new RuntimeException(\"Failed to download file from URL: \" + urlString, e);\n        }\n    }",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.edu.onestudy.repository",
+    "class_name": "QuizAttemptRepository",
+    "full_class_name": "com.edu.onestudy.repository.QuizAttemptRepository",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\repository\\QuizAttemptRepository.java",
+    "content": "public interface    QuizAttemptRepository {\n\n    QuizAttempt save(QuizAttempt attempt);\n\n    Optional<QuizAttempt> findById(String id);\n\n    List<QuizAttempt> findAll();\n\n    List<QuizAttempt> findByUserId(UUID id);\n\n    List<QuizAttempt> findByQuizId(String id);\n}",
+    "implements": [
+      "com.edu.onestudy.repository.impl.QuizAttemptRepositoryImpl"
+    ],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
+        "body": "",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [],
+        "inheritance_info": [
+          "com.edu.onestudy.repository.impl.QuizAttemptRepositoryImpl.save(QuizAttempt attempt)"
+        ],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+        "body": "",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [],
+        "inheritance_info": [
+          "com.edu.onestudy.repository.impl.QuizAttemptRepositoryImpl.findById(String id)"
+        ],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.QuizAttemptRepository.findAll()",
+        "body": "",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [],
+        "inheritance_info": [
+          "com.edu.onestudy.repository.impl.QuizAttemptRepositoryImpl.findAll()"
+        ],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByUserId(UUID id)",
+        "body": "",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [],
+        "inheritance_info": [
+          "com.edu.onestudy.repository.impl.QuizAttemptRepositoryImpl.findByUserId(UUID id)"
+        ],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByQuizId(String id)",
+        "body": "",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [],
+        "inheritance_info": [
+          "com.edu.onestudy.repository.impl.QuizAttemptRepositoryImpl.findByQuizId(String id)"
+        ],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.edu.onestudy.service.impl",
+    "class_name": "QuizServiceImpl",
+    "full_class_name": "com.edu.onestudy.service.impl.QuizServiceImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\impl\\QuizServiceImpl.java",
+    "content": "@Service\n@Slf4j\npublic class QuizServiceImpl implements QuizService {\n\n    private final QuizMapper quizMapper;\n\n    private final QuestionMapper questionMapper;\n\n    private final QuizRepository quizRepository;\n\n    private final QuestionRepository questionRepository;\n\n    private final QuizAttemptRepository quizAttemptRepository;\n\n    private final QuizAnswerRepository quizAnswerRepository;\n\n    private final UserRepository userRepository;\n\n    private final SavedQuizRepository savedQuizRepository;\n\n    private final PronunciationServiceImpl pronunciationService;\n\n    private final ResourceService resourceService;\n\n    public QuizServiceImpl(QuizMapper quizMapper,\n                           QuestionMapper questionMapper,\n                           QuizRepository quizRepository,\n                           QuestionRepository questionRepository,\n                           QuizAttemptRepository quizAttemptRepository,\n                           QuizAnswerRepository quizAnswerRepository,\n                           UserRepository userRepository,\n                           SavedQuizRepository savedQuizRepository,\n                           PronunciationServiceImpl pronunciationService,\n                           ResourceService resourceService) {\n        this.quizMapper = quizMapper;\n        this.questionMapper = questionMapper;\n        this.quizRepository = quizRepository;\n        this.questionRepository = questionRepository;\n        this.quizAttemptRepository = quizAttemptRepository;\n        this.quizAnswerRepository = quizAnswerRepository;\n        this.userRepository = userRepository;\n        this.savedQuizRepository = savedQuizRepository;\n        this.pronunciationService = pronunciationService;\n        this.resourceService = resourceService;\n    }\n\n    @Override\n    public BaseCreateUpdateResponse createQuiz(CreateQuizDto request, UUID authorId) {\n        Quiz q = quizMapper.createQuizDtoToQuiz(request);\n        q.setAuthorId(authorId);\n        quizRepository.save(q);\n        return new BaseCreateUpdateResponse(q.getId().toString());\n    }\n\n    @Override\n    @Transactional(rollbackFor = Exception.class)\n    public BaseCreateUpdateResponse updateQuiz(CreateQuizDto request) {\n        if (request.getId() == null) {\n            throw new IllegalArgumentException(\"Quiz ID must be provided for update operation.\");\n        }\n        Quiz qtest = quizMapper.createQuizDtoToQuiz(request);\n        UUID quizId = UUID.fromString(request.getId());\n        Quiz existingQuiz = quizRepository.findById(request.getId())\n                .orElseThrow(() -> new EntityNotFoundException(\"Quiz with ID \" + request.getId() + \" not found.\"));\n\n        quizMapper.updateQuizFromDto(request, existingQuiz);\n        existingQuiz.setUpdatedAt(LocalDateTime.now());\n        if (request.getIsPublic()) {\n            existingQuiz.setStatus(QuizStatus.PUBLIC);\n        } else {\n            existingQuiz.setStatus(QuizStatus.DRAFT);\n        }\n\n        List<Question> existingQuestions = questionRepository.findByQuizId(request.getId());\n        Map<UUID, Question> existingQuestionMap = existingQuestions.stream()\n                .collect(Collectors.toMap(Question::getId, q -> q));\n\n        List<Question> questionsToSaveOrUpdate = new ArrayList<>();\n        Set<UUID> questionIdsInDto = request.getQuestions().stream()\n                .filter(qDto -> qDto.getId() != null)\n                .map(qDto -> UUID.fromString(qDto.getId()))\n                .collect(Collectors.toSet());\n\n        for (QuestionDto qDto : request.getQuestions()) {\n            if (qDto.getId() == null) {\n                Question newQuestion = questionMapper.questionDtoToQuestion(qDto);\n                newQuestion.setQuizId(quizId);\n                newQuestion.setCreatedAt(LocalDateTime.now());\n                newQuestion.setUpdatedAt(LocalDateTime.now());\n                if (!CollectionUtils.isEmpty(newQuestion.getOptions())) {\n                    for (QuestionOption option : newQuestion.getOptions()) {\n                        option.setId(UUID.randomUUID());\n                    }\n                }\n                questionsToSaveOrUpdate.add(newQuestion);\n            } else {\n                UUID qId = UUID.fromString(qDto.getId());\n                Question questionToUpdate = existingQuestionMap.get(qId);\n                if (questionToUpdate != null) {\n                    questionMapper.updateQuestionFromDto(qDto, questionToUpdate);\n                    questionToUpdate.setUpdatedAt(LocalDateTime.now());\n                    \n                    if (!CollectionUtils.isEmpty(questionToUpdate.getOptions())) {\n                        for (QuestionOption option : questionToUpdate.getOptions()) {\n                            if (option.getId() == null) {\n                                option.setId(UUID.randomUUID());\n                            }\n                        }\n                    }\n                    questionsToSaveOrUpdate.add(questionToUpdate);\n                }\n            }\n        }\n\n        List<Question> questionsToDelete = existingQuestions.stream()\n                .filter(eq -> !questionIdsInDto.contains(eq.getId()))\n                .collect(Collectors.toList());\n\n        if (!questionsToDelete.isEmpty()) {\n            questionRepository.deleteAll(questionsToDelete);\n        }\n        if (!questionsToSaveOrUpdate.isEmpty()) {\n            questionRepository.saveAll(questionsToSaveOrUpdate);\n        }\n\n        existingQuiz.setQuestionCount(questionRepository.countByQuizId(quizId.toString()));\n\n        quizRepository.save(existingQuiz);\n        return new BaseCreateUpdateResponse(existingQuiz.getId().toString());\n    }\n\n    @Override\n    public List<Quiz> getAllPublicQuizzes() {\n        List<Quiz> quizzes = quizRepository.findAllPublic();\n        getQuizAuthor(quizzes);\n        return quizzes;\n    }\n\n    @Override\n    public List<Quiz> getMyQuizzes(UUID id) {\n        List<Quiz> quizzes = quizRepository.findByUserId(id);\n        getQuizAuthor(quizzes);\n        return quizzes;\n    }\n\n    @Override\n    public Quiz getById(String id) {\n        Quiz quiz = quizRepository.findById(id)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n        Set<Question> questions = new HashSet<>(questionRepository.findByQuizId(id));\n        quiz.setQuestions(questions);\n        getQuizAuthor(Collections.singletonList(quiz));\n        return quiz;\n    }\n\n    @Override\n    public void deleteQuiz(String id) {\n        Quiz quiz = quizRepository.findById(id)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n        quiz.setDeletedAt(LocalDateTime.now());\n        quizRepository.save(quiz);\n    }\n\n    @Override\n    @Transactional\n    public BaseCreateUpdateResponse startQuiz(String quizId, UUID userId) {\n        quizRepository.findById(quizId)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n\n        QuizAttempt quizAttempt = new QuizAttempt();\n        quizAttempt.setQuizId(UUID.fromString(quizId));\n        quizAttempt.setUserId(userId);\n        quizAttempt.setScore(BigDecimal.ZERO);\n        quizAttempt.setCorrectAnswers(0);\n        quizAttempt.setTimeSpent(0L);\n        quizAttempt.setCompletedAt(null);\n        quizAttempt.setPassed(false);\n\n        QuizAttempt savedAttempt = quizAttemptRepository.save(quizAttempt);\n        return new BaseCreateUpdateResponse(savedAttempt.getId().toString());\n    }\n\n    @Override\n    @Transactional\n    public BaseCreateUpdateResponse submitQuizQuestion(String attemptId, SubmitAnswerRequest request, UUID id) {\n        UUID questionId = UUID.fromString(request.getQuestionId());\n\n        QuizAttempt quizAttempt = quizAttemptRepository.findById(attemptId)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_FOUND));\n\n        \n        if (quizAttempt.getCompletedAt() != null) {\n            throw new BusinessException(ErrorConstant.QUIZ_ATTEMPT_SUBMITTED);\n        }\n\n        Quiz quiz = quizRepository.findById(quizAttempt.getQuizId().toString()).orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n\n        \n        if (quiz.getTimeLimit() != null && quizAttempt.getCreatedAt() != null) {\n            LocalDateTime start = quizAttempt.getCreatedAt();\n            LocalDateTime end = LocalDateTime.now();\n            long timeSpent = Duration.between(start, end).toMinutes();\n            if (timeSpent > quiz.getTimeLimit()) {\n                quizAttempt.setTimeSpent(timeSpent);\n                quizAttempt.setCompletedAt(quizAttempt.getCreatedAt().plusMinutes(timeSpent));\n                quizAttemptRepository.save(quizAttempt);\n                throw new BusinessException(ErrorConstant.QUIZ_TIME_LIMIT_EXCEEDED);\n            }\n        }\n\n        Question question = questionRepository.findById(request.getQuestionId())\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUESTION_NOT_FOUND));\n\n        if (!Objects.equals(question.getQuizId(), quizAttempt.getQuizId())) {\n            throw new BusinessException(ErrorConstant.QUESTION_DOES_NOT_BELONG_TO_QUIZ);\n        }\n\n        \n        QuizAnswer quizAnswer = new QuizAnswer();\n        quizAnswer.setQuestionId(questionId);\n\n        if (QuestionType.MULTIPLE_CHOICE.name().equals(question.getType()) && !CollectionUtils.isEmpty(question.getOptions())) {\n            List<QuestionOption> options = question.getOptions().stream()\n                    .filter(option -> option.getId() != null && request.getSelectedOptions().contains(option.getId().toString()))\n                    .collect(Collectors.toList());\n            quizAnswer.setSelectedAnswers(options);\n        }\n        quizAnswer.setFillInBlanksAnswers(request.getFillInBlanksAnswers());\n        quizAnswer.setAnswerText(request.getAnswerText());\n        quizAnswer.setTimeTaken(request.getTimeTaken());\n        quizAnswer.setAudioUrl(request.getAudioUrl());\n\n        boolean isCorrect = false;\n        Integer scoreAchieved = 0;\n\n        \n        switch (question.getType().toLowerCase()) {\n            case \"multiple_choice\":\n                List<String> userSelectedValues = request.getSelectedOptions() != null ?\n                        request.getSelectedOptions().stream()\n                                .filter(Objects::nonNull)\n                                .collect(Collectors.toList()) : new ArrayList<>();\n\n                List<String> correctOptionValues = question.getCorrectAnswer() != null ?\n                        question.getOptions().stream().filter(QuestionOption::getIsCorrect).map(i -> i.getId().toString()).sorted().toList() : new ArrayList<>();\n                userSelectedValues.sort(String::compareTo);\n\n                isCorrect = userSelectedValues.equals(correctOptionValues);\n                break;\n            case \"true_false\":\n                isCorrect = (request.getUserAnswerTrueFalse() != null &&\n                        request.getUserAnswerTrueFalse().equals(question.getTrueFalseAnswer()));\n                break;\n            case \"fill_in_the_blank\":\n                List<String> userFillInBlanks = request.getFillInBlanksAnswers() != null ?\n                        request.getFillInBlanksAnswers().stream()\n                                .filter(Objects::nonNull)\n                                .map(i -> i.toLowerCase().trim())\n                                .collect(Collectors.toList()) : new ArrayList<>();\n\n                List<String> correctBlanks = question.getCorrectBlanks() != null ?\n                        question.getCorrectBlanks().stream()\n                                .filter(Objects::nonNull)\n                                .map(i -> i.toLowerCase().trim())\n                                .collect(Collectors.toList()) : new ArrayList<>();\n\n                Collections.sort(userFillInBlanks);\n                Collections.sort(correctBlanks);\n\n                isCorrect = userFillInBlanks.equals(correctBlanks);\n                break;\n            case \"short_answer\":\n                isCorrect = (request.getAnswerText() != null &&\n                        question.getCorrectAnswer() != null &&\n                        !question.getCorrectAnswer().isEmpty() &&\n                        question.getCorrectAnswer().getFirst().equalsIgnoreCase(request.getAnswerText().trim()));\n                break;\n            case \"pronunciation\":\n                if (request.getAudioUrl() == null || request.getAudioUrl().isEmpty()) {\n                    break;\n                }\n                File audioFile = resourceService.downloadResourceFromUrl(request.getAudioUrl());\n                if (audioFile == null || !audioFile.exists()) {\n                    break;\n                }\n                String base64File = \"data:audio/ogg;;base64,\" + FileUtils.convertToBase64(audioFile);\n                if (base64File == null) {\n                    break;\n                }\n                try {\n                    PronunciationAccuracyResponseDto pronunAccuracy = pronunciationService.getAccuracy(\n                            PronunciationAccuracyRequestDto.builder()\n                                    .base64Audio(base64File)\n                                    .text(question.getPronunciationText())\n                                    .build()\n                    );\n                    isCorrect = pronunAccuracy.getPronunciationAccuracy() >= question.getAcceptRate();\n                    quizAnswer.setAnswerText(JsonUtils.toJsonString(pronunAccuracy));\n                } catch (Exception e) {\n                    log.error(\"Error while checking pronunciation accuracy: {}\", e.getMessage());\n                }\n                break;\n\n            default:\n                System.err.println(\"Unknown question type: \" + question.getType());\n        }\n\n        if (isCorrect) {\n            scoreAchieved = question.getPoints() != null ? question.getPoints() : 0;\n        }\n\n        quizAnswer.setCorrect(isCorrect);\n        quizAnswer.setScoreAchieved(scoreAchieved);\n\n        List<QuizAnswer> currentAnswers = quizAnswerRepository.findByQuizAttemptId(attemptId);\n        logger.info(currentAnswers);\n\n        for (int i = 0; i < currentAnswers.size(); i++) {\n            if (currentAnswers.get(i).getQuestionId().equals(questionId)) {\n                QuizAnswer oldAnswer = currentAnswers.get(i);\n                quizAttempt.setScore(quizAttempt.getScore().subtract(BigDecimal.valueOf(oldAnswer.getScoreAchieved())));\n                if (oldAnswer.isCorrect()) {\n                    quizAttempt.setCorrectAnswers(quizAttempt.getCorrectAnswers() - 1);\n                }\n                quizAnswerRepository.delete(oldAnswer);\n                break;\n            }\n        }\n\n        quizAnswer.setQuizAttemptId(UUID.fromString(attemptId));\n        \n        quizAnswerRepository.save(quizAnswer);\n\n        quizAttempt.setScore(quizAttempt.getScore().add(BigDecimal.valueOf(scoreAchieved)));\n        if (isCorrect) {\n            quizAttempt.setCorrectAnswers(quizAttempt.getCorrectAnswers() + 1);\n        }\n\n        \n        quizAttemptRepository.save(quizAttempt);\n\n        return new BaseCreateUpdateResponse(quizAnswer.getId().toString());\n    }\n\n    @Override\n    public List<Quiz> getMyQuizAttempts(String userId) {\n        List<QuizAttempt> attempts = quizAttemptRepository.findByUserId(UUID.fromString(userId));\n        if (CollectionUtils.isEmpty(attempts)) {\n            return Collections.emptyList();\n        }\n\n        Set<String> quizId = attempts.stream()\n                .map(QuizAttempt::getQuizId)\n                .map(UUID::toString)\n                .collect(Collectors.toSet());\n\n        List<Quiz> quizzes = quizRepository.findByIdIn(quizId);\n        if (CollectionUtils.isEmpty(quizzes)) {\n            return Collections.emptyList();\n        }\n\n        getQuizAuthor(quizzes);\n\n        Map<UUID, List<QuizAttempt>> attemptMap = attempts.stream()\n                .collect(Collectors.groupingBy(QuizAttempt::getQuizId));\n        for (Quiz quiz : quizzes) {\n            quiz.setQuizAttempts(new HashSet<>(attemptMap.get(quiz.getId())));\n        }\n\n        return quizzes;\n    }\n\n    @Override\n    public QuizAttempt getAttempt(String attemptId, UUID userId) {\n        \n        QuizAttempt attempt = quizAttemptRepository.findById(attemptId).orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_FOUND));\n        Quiz quiz = this.getById(attempt.getQuizId().toString());\n        getQuizAuthor(Collections.singletonList(quiz));\n        attempt.setQuiz(quiz);\n        List<QuizAnswer> answers = quizAnswerRepository.findByQuizAttemptId(attemptId);\n        attempt.setAnswers(answers);\n\n        return attempt;\n    }\n\n    @Override\n    public void submitQuizComplete(String attemptId, UUID id) {\n        QuizAttempt attempt = quizAttemptRepository.findById(attemptId).orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_FOUND));\n        if (!id.equals(attempt.getUserId())) {\n            throw new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_BELONG_TO_USER);\n        }\n\n        if (attempt.getCompletedAt() != null) {\n            throw new BusinessException(ErrorConstant.QUIZ_ATTEMPT_SUBMITTED);\n        }\n        attempt.setCompletedAt(LocalDateTime.now());\n        quizAttemptRepository.save(attempt);\n        log.info(\"saved quiz attempt with id: {}\", attemptId);\n    }\n\n    @Override\n    public Quiz getQuizStatsById(String id) {\n        Quiz quiz = quizRepository.findById(id)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n        getQuizAuthor(Collections.singletonList(quiz));\n        List<Question> questions = questionRepository.findByQuizId(id);\n        quiz.setQuestions(new HashSet<>(questions));\n        List<QuizAttempt> attempts = quizAttemptRepository.findByQuizId(quiz.getId().toString());\n\n        attempts.forEach(attempt -> {\n            userRepository.getUserById(attempt.getUserId().toString()).ifPresent(attempt::setUser);\n        });\n\n        quiz.setQuizAttempts(new HashSet<>(attempts));\n        List<User> savedUsers = savedQuizRepository.findAllByQuizId(id)\n                .stream()\n                .map(savedQuiz -> userRepository.getUserById(savedQuiz.getUserId().toString()).orElse(null))\n                .filter(Objects::nonNull)\n                .toList();\n        quiz.setSavedByUsers(new HashSet<>(savedUsers));\n\n        return quiz;\n    }\n\n    @Override\n    public void saveQuiz(String quizId, UUID userId) {\n        savedQuizRepository.saveQuiz(quizId, userId.toString());\n    }\n\n    @Override\n    public List<Quiz> getSavedQuizzes(UUID userId) {\n        List<UserSavedQuiz> savedQuizzes = savedQuizRepository.findAllByUserId(userId.toString());\n        if (CollectionUtils.isEmpty(savedQuizzes)) {\n            return Collections.emptyList();\n        }\n\n        Set<String> quizIds = savedQuizzes.stream()\n                .map(UserSavedQuiz::getQuizId)\n                .map(UUID::toString)\n                .collect(Collectors.toSet());\n        if (CollectionUtils.isEmpty(quizIds)) {\n            return Collections.emptyList();\n        }\n\n        List<Quiz> quizzes = quizRepository.findByIdIn(quizIds);\n        if (CollectionUtils.isEmpty(quizzes)) {\n            return Collections.emptyList();\n        }\n\n        getQuizAuthor(quizzes);\n\n        return quizzes;\n    }\n\n    @Override\n    public void unsaveQuiz(String quizId, UUID userId) {\n        UserSavedQuiz savedQuiz = savedQuizRepository.findAllByQuizId(quizId)\n                .stream()\n                .filter(q -> q.getUserId().equals(userId))\n                .findFirst()\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_SAVED));\n\n        savedQuiz.setSavedAt(LocalDateTime.now());\n        savedQuiz.setDeletedAt(null);\n        savedQuizRepository.update(savedQuiz);\n    }\n\n    @Override\n    public List<UserSavedQuiz> getUserSavedQuiz(String quizId, UUID userId) {\n        List<UserSavedQuiz> savedQuizzes = savedQuizRepository.findAllByUserId(userId.toString());\n        savedQuizzes.forEach(savedQuiz -> {\n            userRepository.getUserById(savedQuiz.getUserId().toString()).ifPresent(savedQuiz::setUser);\n        });\n        return savedQuizzes;\n    }\n\n    private void getQuizAuthor(List<Quiz> quizzes) {\n        quizzes.forEach(q -> {\n            if (q.getAuthorId() != null) {\n                q.setAuthor(userRepository.getUserById(q.getAuthorId().toString()).orElse(null));\n            }\n        });\n    }\n\n}",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.createQuiz(CreateQuizDto request, UUID authorId)",
+        "body": "@Override\n    public BaseCreateUpdateResponse createQuiz(CreateQuizDto request, UUID authorId) {\n        Quiz q = quizMapper.createQuizDtoToQuiz(request);\n        q.setAuthorId(authorId);\n        quizRepository.save(q);\n        return new BaseCreateUpdateResponse(q.getId().toString());\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.mapper.QuizMapper.createQuizDtoToQuiz(CreateQuizDto request)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.updateQuiz(CreateQuizDto request)",
+        "body": "@Override\n    @Transactional(rollbackFor = Exception.class)\n    public BaseCreateUpdateResponse updateQuiz(CreateQuizDto request) {\n        if (request.getId() == null) {\n            throw new IllegalArgumentException(\"Quiz ID must be provided for update operation.\");\n        }\n        Quiz qtest = quizMapper.createQuizDtoToQuiz(request);\n        UUID quizId = UUID.fromString(request.getId());\n        Quiz existingQuiz = quizRepository.findById(request.getId())\n                .orElseThrow(() -> new EntityNotFoundException(\"Quiz with ID \" + request.getId() + \" not found.\"));\n\n        quizMapper.updateQuizFromDto(request, existingQuiz);\n        existingQuiz.setUpdatedAt(LocalDateTime.now());\n        if (request.getIsPublic()) {\n            existingQuiz.setStatus(QuizStatus.PUBLIC);\n        } else {\n            existingQuiz.setStatus(QuizStatus.DRAFT);\n        }\n\n        List<Question> existingQuestions = questionRepository.findByQuizId(request.getId());\n        Map<UUID, Question> existingQuestionMap = existingQuestions.stream()\n                .collect(Collectors.toMap(Question::getId, q -> q));\n\n        List<Question> questionsToSaveOrUpdate = new ArrayList<>();\n        Set<UUID> questionIdsInDto = request.getQuestions().stream()\n                .filter(qDto -> qDto.getId() != null)\n                .map(qDto -> UUID.fromString(qDto.getId()))\n                .collect(Collectors.toSet());\n\n        for (QuestionDto qDto : request.getQuestions()) {\n            if (qDto.getId() == null) {\n                Question newQuestion = questionMapper.questionDtoToQuestion(qDto);\n                newQuestion.setQuizId(quizId);\n                newQuestion.setCreatedAt(LocalDateTime.now());\n                newQuestion.setUpdatedAt(LocalDateTime.now());\n                if (!CollectionUtils.isEmpty(newQuestion.getOptions())) {\n                    for (QuestionOption option : newQuestion.getOptions()) {\n                        option.setId(UUID.randomUUID());\n                    }\n                }\n                questionsToSaveOrUpdate.add(newQuestion);\n            } else {\n                UUID qId = UUID.fromString(qDto.getId());\n                Question questionToUpdate = existingQuestionMap.get(qId);\n                if (questionToUpdate != null) {\n                    questionMapper.updateQuestionFromDto(qDto, questionToUpdate);\n                    questionToUpdate.setUpdatedAt(LocalDateTime.now());\n                    \n                    if (!CollectionUtils.isEmpty(questionToUpdate.getOptions())) {\n                        for (QuestionOption option : questionToUpdate.getOptions()) {\n                            if (option.getId() == null) {\n                                option.setId(UUID.randomUUID());\n                            }\n                        }\n                    }\n                    questionsToSaveOrUpdate.add(questionToUpdate);\n                }\n            }\n        }\n\n        List<Question> questionsToDelete = existingQuestions.stream()\n                .filter(eq -> !questionIdsInDto.contains(eq.getId()))\n                .collect(Collectors.toList());\n\n        if (!questionsToDelete.isEmpty()) {\n            questionRepository.deleteAll(questionsToDelete);\n        }\n        if (!questionsToSaveOrUpdate.isEmpty()) {\n            questionRepository.saveAll(questionsToSaveOrUpdate);\n        }\n\n        existingQuiz.setQuestionCount(questionRepository.countByQuizId(quizId.toString()));\n\n        quizRepository.save(existingQuiz);\n        return new BaseCreateUpdateResponse(existingQuiz.getId().toString());\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.countByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.deleteAll(List<Question> questions)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.mapper.QuizMapper.updateQuizFromDto(CreateQuizDto dto, @MappingTarget Quiz entity)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.mapper.QuestionMapper.updateQuestionFromDto(QuestionDto dto, @MappingTarget Question entity)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.mapper.QuestionMapper.questionDtoToQuestion(QuestionDto dto)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.entity.Question"
+        ],
+        "field_access": [
+          "PUBLIC",
+          "DRAFT"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getAllPublicQuizzes()",
+        "body": "@Override\n    public List<Quiz> getAllPublicQuizzes() {\n        List<Quiz> quizzes = quizRepository.findAllPublic();\n        getQuizAuthor(quizzes);\n        return quizzes;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findAllPublic()",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getMyQuizzes(UUID id)",
+        "body": "@Override\n    public List<Quiz> getMyQuizzes(UUID id) {\n        List<Quiz> quizzes = quizRepository.findByUserId(id);\n        getQuizAuthor(quizzes);\n        return quizzes;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findByUserId(UUID id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getById(String id)",
+        "body": "@Override\n    public Quiz getById(String id) {\n        Quiz quiz = quizRepository.findById(id)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n        Set<Question> questions = new HashSet<>(questionRepository.findByQuizId(id));\n        quiz.setQuestions(questions);\n        getQuizAuthor(Collections.singletonList(quiz));\n        return quiz;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.Question"
+        ],
+        "field_access": [
+          "int QUIZ_NOT_FOUND = 4040002"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.deleteQuiz(String id)",
+        "body": "@Override\n    public void deleteQuiz(String id) {\n        Quiz quiz = quizRepository.findById(id)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n        quiz.setDeletedAt(LocalDateTime.now());\n        quizRepository.save(quiz);\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz"
+        ],
+        "field_access": [
+          "int QUIZ_NOT_FOUND = 4040002"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.startQuiz(String quizId, UUID userId)",
+        "body": "@Override\n    @Transactional\n    public BaseCreateUpdateResponse startQuiz(String quizId, UUID userId) {\n        quizRepository.findById(quizId)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n\n        QuizAttempt quizAttempt = new QuizAttempt();\n        quizAttempt.setQuizId(UUID.fromString(quizId));\n        quizAttempt.setUserId(userId);\n        quizAttempt.setScore(BigDecimal.ZERO);\n        quizAttempt.setCorrectAnswers(0);\n        quizAttempt.setTimeSpent(0L);\n        quizAttempt.setCompletedAt(null);\n        quizAttempt.setPassed(false);\n\n        QuizAttempt savedAttempt = quizAttemptRepository.save(quizAttempt);\n        return new BaseCreateUpdateResponse(savedAttempt.getId().toString());\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [
+          "BigDecimal ZERO",
+          "int QUIZ_NOT_FOUND = 4040002"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.submitQuizQuestion(String attemptId, SubmitAnswerRequest request, UUID id)",
+        "body": "@Override\n    @Transactional\n    public BaseCreateUpdateResponse submitQuizQuestion(String attemptId, SubmitAnswerRequest request, UUID id) {\n        UUID questionId = UUID.fromString(request.getQuestionId());\n\n        QuizAttempt quizAttempt = quizAttemptRepository.findById(attemptId)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_FOUND));\n\n        \n        if (quizAttempt.getCompletedAt() != null) {\n            throw new BusinessException(ErrorConstant.QUIZ_ATTEMPT_SUBMITTED);\n        }\n\n        Quiz quiz = quizRepository.findById(quizAttempt.getQuizId().toString()).orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n\n        \n        if (quiz.getTimeLimit() != null && quizAttempt.getCreatedAt() != null) {\n            LocalDateTime start = quizAttempt.getCreatedAt();\n            LocalDateTime end = LocalDateTime.now();\n            long timeSpent = Duration.between(start, end).toMinutes();\n            if (timeSpent > quiz.getTimeLimit()) {\n                quizAttempt.setTimeSpent(timeSpent);\n                quizAttempt.setCompletedAt(quizAttempt.getCreatedAt().plusMinutes(timeSpent));\n                quizAttemptRepository.save(quizAttempt);\n                throw new BusinessException(ErrorConstant.QUIZ_TIME_LIMIT_EXCEEDED);\n            }\n        }\n\n        Question question = questionRepository.findById(request.getQuestionId())\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUESTION_NOT_FOUND));\n\n        if (!Objects.equals(question.getQuizId(), quizAttempt.getQuizId())) {\n            throw new BusinessException(ErrorConstant.QUESTION_DOES_NOT_BELONG_TO_QUIZ);\n        }\n\n        \n        QuizAnswer quizAnswer = new QuizAnswer();\n        quizAnswer.setQuestionId(questionId);\n\n        if (QuestionType.MULTIPLE_CHOICE.name().equals(question.getType()) && !CollectionUtils.isEmpty(question.getOptions())) {\n            List<QuestionOption> options = question.getOptions().stream()\n                    .filter(option -> option.getId() != null && request.getSelectedOptions().contains(option.getId().toString()))\n                    .collect(Collectors.toList());\n            quizAnswer.setSelectedAnswers(options);\n        }\n        quizAnswer.setFillInBlanksAnswers(request.getFillInBlanksAnswers());\n        quizAnswer.setAnswerText(request.getAnswerText());\n        quizAnswer.setTimeTaken(request.getTimeTaken());\n        quizAnswer.setAudioUrl(request.getAudioUrl());\n\n        boolean isCorrect = false;\n        Integer scoreAchieved = 0;\n\n        \n        switch (question.getType().toLowerCase()) {\n            case \"multiple_choice\":\n                List<String> userSelectedValues = request.getSelectedOptions() != null ?\n                        request.getSelectedOptions().stream()\n                                .filter(Objects::nonNull)\n                                .collect(Collectors.toList()) : new ArrayList<>();\n\n                List<String> correctOptionValues = question.getCorrectAnswer() != null ?\n                        question.getOptions().stream().filter(QuestionOption::getIsCorrect).map(i -> i.getId().toString()).sorted().toList() : new ArrayList<>();\n                userSelectedValues.sort(String::compareTo);\n\n                isCorrect = userSelectedValues.equals(correctOptionValues);\n                break;\n            case \"true_false\":\n                isCorrect = (request.getUserAnswerTrueFalse() != null &&\n                        request.getUserAnswerTrueFalse().equals(question.getTrueFalseAnswer()));\n                break;\n            case \"fill_in_the_blank\":\n                List<String> userFillInBlanks = request.getFillInBlanksAnswers() != null ?\n                        request.getFillInBlanksAnswers().stream()\n                                .filter(Objects::nonNull)\n                                .map(i -> i.toLowerCase().trim())\n                                .collect(Collectors.toList()) : new ArrayList<>();\n\n                List<String> correctBlanks = question.getCorrectBlanks() != null ?\n                        question.getCorrectBlanks().stream()\n                                .filter(Objects::nonNull)\n                                .map(i -> i.toLowerCase().trim())\n                                .collect(Collectors.toList()) : new ArrayList<>();\n\n                Collections.sort(userFillInBlanks);\n                Collections.sort(correctBlanks);\n\n                isCorrect = userFillInBlanks.equals(correctBlanks);\n                break;\n            case \"short_answer\":\n                isCorrect = (request.getAnswerText() != null &&\n                        question.getCorrectAnswer() != null &&\n                        !question.getCorrectAnswer().isEmpty() &&\n                        question.getCorrectAnswer().getFirst().equalsIgnoreCase(request.getAnswerText().trim()));\n                break;\n            case \"pronunciation\":\n                if (request.getAudioUrl() == null || request.getAudioUrl().isEmpty()) {\n                    break;\n                }\n                File audioFile = resourceService.downloadResourceFromUrl(request.getAudioUrl());\n                if (audioFile == null || !audioFile.exists()) {\n                    break;\n                }\n                String base64File = \"data:audio/ogg;;base64,\" + FileUtils.convertToBase64(audioFile);\n                if (base64File == null) {\n                    break;\n                }\n                try {\n                    PronunciationAccuracyResponseDto pronunAccuracy = pronunciationService.getAccuracy(\n                            PronunciationAccuracyRequestDto.builder()\n                                    .base64Audio(base64File)\n                                    .text(question.getPronunciationText())\n                                    .build()\n                    );\n                    isCorrect = pronunAccuracy.getPronunciationAccuracy() >= question.getAcceptRate();\n                    quizAnswer.setAnswerText(JsonUtils.toJsonString(pronunAccuracy));\n                } catch (Exception e) {\n                    log.error(\"Error while checking pronunciation accuracy: {}\", e.getMessage());\n                }\n                break;\n\n            default:\n                System.err.println(\"Unknown question type: \" + question.getType());\n        }\n\n        if (isCorrect) {\n            scoreAchieved = question.getPoints() != null ? question.getPoints() : 0;\n        }\n\n        quizAnswer.setCorrect(isCorrect);\n        quizAnswer.setScoreAchieved(scoreAchieved);\n\n        List<QuizAnswer> currentAnswers = quizAnswerRepository.findByQuizAttemptId(attemptId);\n        logger.info(currentAnswers);\n\n        for (int i = 0; i < currentAnswers.size(); i++) {\n            if (currentAnswers.get(i).getQuestionId().equals(questionId)) {\n                QuizAnswer oldAnswer = currentAnswers.get(i);\n                quizAttempt.setScore(quizAttempt.getScore().subtract(BigDecimal.valueOf(oldAnswer.getScoreAchieved())));\n                if (oldAnswer.isCorrect()) {\n                    quizAttempt.setCorrectAnswers(quizAttempt.getCorrectAnswers() - 1);\n                }\n                quizAnswerRepository.delete(oldAnswer);\n                break;\n            }\n        }\n\n        quizAnswer.setQuizAttemptId(UUID.fromString(attemptId));\n        \n        quizAnswerRepository.save(quizAnswer);\n\n        quizAttempt.setScore(quizAttempt.getScore().add(BigDecimal.valueOf(scoreAchieved)));\n        if (isCorrect) {\n            quizAttempt.setCorrectAnswers(quizAttempt.getCorrectAnswers() + 1);\n        }\n\n        \n        quizAttemptRepository.save(quizAttempt);\n\n        return new BaseCreateUpdateResponse(quizAnswer.getId().toString());\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.utils.FileUtils.convertToBase64(File file)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.save(QuizAnswer answer)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.utils.JsonUtils.toJsonString(Object input)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.delete(QuizAnswer oldAnswer)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationServiceImpl.getAccuracy(PronunciationAccuracyRequestDto request)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.ResourceService.downloadResourceFromUrl(String url)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.entity.QuestionOption",
+          "com.edu.onestudy.entity.Question",
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
+          "com.edu.onestudy.entity.QuizAttempt",
+          "com.edu.onestudy.entity.QuizAnswer",
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest"
+        ],
+        "field_access": [
+          "int QUESTION_NOT_FOUND = 4040006",
+          "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
+          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003",
+          "MULTIPLE_CHOICE",
+          "int QUIZ_NOT_FOUND = 4040002",
+          "int QUIZ_TIME_LIMIT_EXCEEDED = 4040008",
+          "PrintStream err",
+          "int QUESTION_DOES_NOT_BELONG_TO_QUIZ = 4040005"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getMyQuizAttempts(String userId)",
+        "body": "@Override\n    public List<Quiz> getMyQuizAttempts(String userId) {\n        List<QuizAttempt> attempts = quizAttemptRepository.findByUserId(UUID.fromString(userId));\n        if (CollectionUtils.isEmpty(attempts)) {\n            return Collections.emptyList();\n        }\n\n        Set<String> quizId = attempts.stream()\n                .map(QuizAttempt::getQuizId)\n                .map(UUID::toString)\n                .collect(Collectors.toSet());\n\n        List<Quiz> quizzes = quizRepository.findByIdIn(quizId);\n        if (CollectionUtils.isEmpty(quizzes)) {\n            return Collections.emptyList();\n        }\n\n        getQuizAuthor(quizzes);\n\n        Map<UUID, List<QuizAttempt>> attemptMap = attempts.stream()\n                .collect(Collectors.groupingBy(QuizAttempt::getQuizId));\n        for (Quiz quiz : quizzes) {\n            quiz.setQuizAttempts(new HashSet<>(attemptMap.get(quiz.getId())));\n        }\n\n        return quizzes;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByUserId(UUID id)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getAttempt(String attemptId, UUID userId)",
+        "body": "@Override\n    public QuizAttempt getAttempt(String attemptId, UUID userId) {\n        \n        QuizAttempt attempt = quizAttemptRepository.findById(attemptId).orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_FOUND));\n        Quiz quiz = this.getById(attempt.getQuizId().toString());\n        getQuizAuthor(Collections.singletonList(quiz));\n        attempt.setQuiz(quiz);\n        List<QuizAnswer> answers = quizAnswerRepository.findByQuizAttemptId(attemptId);\n        attempt.setAnswers(answers);\n\n        return attempt;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getById(String id)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.QuizAttempt",
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [
+          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.submitQuizComplete(String attemptId, UUID id)",
+        "body": "@Override\n    public void submitQuizComplete(String attemptId, UUID id) {\n        QuizAttempt attempt = quizAttemptRepository.findById(attemptId).orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_FOUND));\n        if (!id.equals(attempt.getUserId())) {\n            throw new BusinessException(ErrorConstant.QUIZ_ATTEMPT_NOT_BELONG_TO_USER);\n        }\n\n        if (attempt.getCompletedAt() != null) {\n            throw new BusinessException(ErrorConstant.QUIZ_ATTEMPT_SUBMITTED);\n        }\n        attempt.setCompletedAt(LocalDateTime.now());\n        quizAttemptRepository.save(attempt);\n        log.info(\"saved quiz attempt with id: {}\", attemptId);\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAttempt"
+        ],
+        "field_access": [
+          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003",
+          "int QUIZ_ATTEMPT_NOT_BELONG_TO_USER = 4040007",
+          "int QUIZ_ATTEMPT_SUBMITTED = 4040004"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizStatsById(String id)",
+        "body": "@Override\n    public Quiz getQuizStatsById(String id) {\n        Quiz quiz = quizRepository.findById(id)\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_FOUND));\n        getQuizAuthor(Collections.singletonList(quiz));\n        List<Question> questions = questionRepository.findByQuizId(id);\n        quiz.setQuestions(new HashSet<>(questions));\n        List<QuizAttempt> attempts = quizAttemptRepository.findByQuizId(quiz.getId().toString());\n\n        attempts.forEach(attempt -> {\n            userRepository.getUserById(attempt.getUserId().toString()).ifPresent(attempt::setUser);\n        });\n\n        quiz.setQuizAttempts(new HashSet<>(attempts));\n        List<User> savedUsers = savedQuizRepository.findAllByQuizId(id)\n                .stream()\n                .map(savedQuiz -> userRepository.getUserById(savedQuiz.getUserId().toString()).orElse(null))\n                .filter(Objects::nonNull)\n                .toList();\n        quiz.setSavedByUsers(new HashSet<>(savedUsers));\n\n        return quiz;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.UserRepository.getUserById(String userId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByQuizId(String id)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.QuizAttempt",
+          "com.edu.onestudy.entity.User",
+          "com.edu.onestudy.entity.Question"
+        ],
+        "field_access": [
+          "int QUIZ_NOT_FOUND = 4040002"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.saveQuiz(String quizId, UUID userId)",
+        "body": "@Override\n    public void saveQuiz(String quizId, UUID userId) {\n        savedQuizRepository.saveQuiz(quizId, userId.toString());\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.saveQuiz(String quizId, String userId)",
+            "params": []
+          }
+        ],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getSavedQuizzes(UUID userId)",
+        "body": "@Override\n    public List<Quiz> getSavedQuizzes(UUID userId) {\n        List<UserSavedQuiz> savedQuizzes = savedQuizRepository.findAllByUserId(userId.toString());\n        if (CollectionUtils.isEmpty(savedQuizzes)) {\n            return Collections.emptyList();\n        }\n\n        Set<String> quizIds = savedQuizzes.stream()\n                .map(UserSavedQuiz::getQuizId)\n                .map(UUID::toString)\n                .collect(Collectors.toSet());\n        if (CollectionUtils.isEmpty(quizIds)) {\n            return Collections.emptyList();\n        }\n\n        List<Quiz> quizzes = quizRepository.findByIdIn(quizIds);\n        if (CollectionUtils.isEmpty(quizzes)) {\n            return Collections.emptyList();\n        }\n\n        getQuizAuthor(quizzes);\n\n        return quizzes;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByUserId(String userId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.UserSavedQuiz"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.unsaveQuiz(String quizId, UUID userId)",
+        "body": "@Override\n    public void unsaveQuiz(String quizId, UUID userId) {\n        UserSavedQuiz savedQuiz = savedQuizRepository.findAllByQuizId(quizId)\n                .stream()\n                .filter(q -> q.getUserId().equals(userId))\n                .findFirst()\n                .orElseThrow(() -> new BusinessException(ErrorConstant.QUIZ_NOT_SAVED));\n\n        savedQuiz.setSavedAt(LocalDateTime.now());\n        savedQuiz.setDeletedAt(null);\n        savedQuizRepository.update(savedQuiz);\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.update(UserSavedQuiz savedQuiz)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.UserSavedQuiz"
+        ],
+        "field_access": [
+          "int QUIZ_NOT_SAVED = 4040009"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getUserSavedQuiz(String quizId, UUID userId)",
+        "body": "@Override\n    public List<UserSavedQuiz> getUserSavedQuiz(String quizId, UUID userId) {\n        List<UserSavedQuiz> savedQuizzes = savedQuizRepository.findAllByUserId(userId.toString());\n        savedQuizzes.forEach(savedQuiz -> {\n            userRepository.getUserById(savedQuiz.getUserId().toString()).ifPresent(savedQuiz::setUser);\n        });\n        return savedQuizzes;\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByUserId(String userId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.UserRepository.getUserById(String userId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.UserSavedQuiz"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+        "body": "private void getQuizAuthor(List<Quiz> quizzes) {\n        quizzes.forEach(q -> {\n            if (q.getAuthorId() != null) {\n                q.setAuthor(userRepository.getUserById(q.getAuthorId().toString()).orElse(null));\n            }\n        });\n    }",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.UserRepository.getUserById(String userId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Quiz"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  }
+]
