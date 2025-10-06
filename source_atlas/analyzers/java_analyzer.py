@@ -13,6 +13,8 @@ from source_atlas.lsp.implements.java_lsp import JavaLSPService
 from source_atlas.models.domain_models import Method, MethodCall, ChunkType
 from source_atlas.utils.comment_remover import JavaCommentRemover
 from source_atlas.utils.tree_sitter_helper import extract_content
+import hashlib
+import re
 
 
 class JavaBuiltinPackages:
@@ -250,6 +252,51 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
                 JavaBuiltinPackages.SPRING_PACKAGES |
                 JavaBuiltinPackages.COMMON_LIBRARY_PACKAGES
         )
+
+    def compute_normalized_hash(self, code: str) -> str:
+        """
+        Compute hash using normalized code (fallback when Tree-sitter is not available)
+        """
+        return hashlib.md5(code.encode('utf-8')).hexdigest()
+
+    def compute_ast_hash(self, code: str) -> str:
+        """
+        Compute AST hash for Java code using Tree-sitter.
+        This method is specific to Java and uses the existing parser.
+        """
+        try:
+            tree = self.parser.parse(bytes(code, "utf8"))
+            root = tree.root_node
+
+            def walk_ast(node):
+                """Walk the AST and create a structural representation"""
+                # Skip comments and whitespace nodes
+                if node.type in ("comment", "block_comment", "line_comment", "line_comment", "modifiers"):
+                    return ""
+                
+                # For leaf nodes, include the type but not the content
+                if not node.children:
+                    return f"{node.type}"
+                
+                # For internal nodes, include type and children
+                children_repr = []
+                for child in node.children:
+                    child_repr = walk_ast(child)
+                    if child_repr:  # Only include non-empty children
+                        children_repr.append(child_repr)
+                
+                if children_repr:
+                    return f"{node.type}({','.join(children_repr)})"
+                else:
+                    return f"{node.type}"
+
+            ast_repr = walk_ast(root)
+            return hashlib.md5(ast_repr.encode()).hexdigest()
+            
+        except Exception as e:
+            logger.debug(f"Error computing Java AST hash, falling back to normalized hash: {e}")
+            # Fallback to normalized content hash
+            return self.compute_normalized_hash(code)
 
     def __enter__(self):
         self._server_ctx = self.lsp_service.start_server()
@@ -625,9 +672,13 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
             elif is_configuration:
                 method_type = ChunkType.CONFIGURATION
 
+            # Compute AST hash for method body
+            method_ast_hash = self.compute_ast_hash(body)
+
             return Method(
                 name=f"{full_class_name}.{method_name}",
                 body=body,
+                ast_hash=method_ast_hash,
                 method_calls=tuple(method_calls),
                 used_types=tuple(used_types),
                 field_access=tuple(field_access),

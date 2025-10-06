@@ -183,11 +183,11 @@ class Neo4jService:
                 // Điều kiện lọc - chỉ tạo node mới khi thỏa mãn các điều kiện
                 WITH node, main_node, base_node
                 WHERE 
-                    // ✅ TH1: Có base_branch, so sánh với base_branch
-                    (base_node IS NOT NULL AND node.content <> base_node.content)
+                    // ✅ TH1: Có base_branch, so sánh với base_branch bằng AST hash
+                    (base_node IS NOT NULL AND node.ast_hash <> base_node.ast_hash)
                     OR
-                    // ✅ TH2: Không có base_branch, so sánh với main_branch
-                    (base_node IS NULL AND main_node IS NOT NULL AND node.content <> main_node.content)
+                    // ✅ TH2: Không có base_branch, so sánh với main_branch bằng AST hash
+                    (base_node IS NULL AND main_node IS NOT NULL AND node.ast_hash <> main_node.ast_hash)
                     OR
                     // ✅ TH3: Node hoàn toàn mới - chưa tồn tại ở cả base và main
                     (base_node IS NULL AND main_node IS NULL)
@@ -198,6 +198,7 @@ class Neo4jService:
                     class_name: node.class_name,
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
                     content: node.content,
+                    ast_hash: node.ast_hash,
                     project_id: node.project_id,
                     branch: node.branch,
                     pull_request_id: CASE WHEN node.pull_request_id IS NOT NULL THEN node.pull_request_id ELSE null END
@@ -213,7 +214,7 @@ class Neo4jService:
                     class_name: node.class_name,
                     project_id: node.project_id,
                     branch: $main_branch,
-                    content: node.content,
+                    ast_hash: node.ast_hash,
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END
                 })
                 WHERE main_node IS NULL
@@ -222,6 +223,7 @@ class Neo4jService:
                     class_name: node.class_name,
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
                     content: node.content,
+                    ast_hash: node.ast_hash,
                     project_id: node.project_id,
                     branch: node.branch,
                     pull_request_id: CASE WHEN node.pull_request_id IS NOT NULL THEN node.pull_request_id ELSE null END
@@ -237,6 +239,7 @@ class Neo4jService:
                     class_name: node.class_name,
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END,
                     content: node.content,
+                    ast_hash: node.ast_hash,
                     project_id: node.project_id,
                     branch: node.branch,
                     pull_request_id: CASE WHEN node.pull_request_id IS NOT NULL THEN node.pull_request_id ELSE null END

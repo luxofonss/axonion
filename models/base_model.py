@@ -13,4 +13,4 @@ class BaseModel(SQLModel):
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()}
-    )
+)

@@ -50,6 +50,7 @@ class ChunkType(Enum):
 class Method:
     name: str
     body: str
+    ast_hash: str
     method_calls: Tuple[MethodCall, ...]
     used_types: Tuple[str, ...]
     field_access: Tuple[str, ...]
@@ -63,6 +64,7 @@ class Method:
         return {
             "name": self.name,
             "body": self.body,
+            "ast_hash": self.ast_hash,
             "method_calls": self.method_calls,
             "used_types": self.used_types,
             "field_access": self.field_access,
@@ -80,6 +82,7 @@ class CodeChunk:
     full_class_name: Optional[str]
     file_path: str
     content: str
+    ast_hash: str
     implements: Tuple[str, ...]
     methods: List[Method]
     parent_class: Optional[str]
@@ -96,10 +99,12 @@ class CodeChunk:
             "full_class_name": self.full_class_name,
             "file_path": self.file_path,
             "content": self.content,
+            "ast_hash": self.ast_hash,
             "implements": list(self.implements),
             "methods": [{
                 "name": method.name,
                 "body": method.body,
+                "ast_hash": method.ast_hash,
                 "method_calls": [{"name": method_call.name,
                                   "params": method_call.params} for method_call in method.method_calls],
                 "used_types": list(method.used_types),
@@ -125,6 +130,7 @@ class CodeChunk:
             full_class_name=None,
             file_path=str(file_path),
             content=file_path.read_text(),
+            ast_hash="",  # Will be computed later
             implements=(),
             methods=[],
             parent_class=None,

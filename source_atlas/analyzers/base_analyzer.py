@@ -133,12 +133,17 @@ class BaseCodeAnalyzer(ABC):
                     context.full_class_name, file_path, context.import_mapping
                 )
 
+                # Compute AST hash for the class content
+                class_content = content[class_node.start_byte:class_node.end_byte]
+                ast_hash = self.compute_ast_hash(class_content)
+
                 return CodeChunk(
                     package=context.package,
                     class_name=context.class_name,
                     full_class_name=context.full_class_name,
                     file_path=file_path,
-                    content=content[class_node.start_byte:class_node.end_byte],
+                    content=class_content,
+                    ast_hash=ast_hash,
                     implements=implements,
                     methods=methods,
                     is_nested=context.is_nested,
@@ -253,6 +258,14 @@ class BaseCodeAnalyzer(ABC):
 
     @abstractmethod
     def build_import_mapping(self, root_node: Node, content: str) -> Dict[str, str]:
+        pass
+
+    @abstractmethod
+    def compute_ast_hash(self, code: str) -> str:
+        """
+        Compute AST hash for the specific language.
+        Should be implemented by each language-specific analyzer.
+        """
         pass
 
     def _filter_files_by_targets(self, code_files: List[Path], target_files: Optional[List[str]]) -> List[Path]:
