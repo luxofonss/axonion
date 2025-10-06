@@ -336,29 +336,6 @@ class GitHubWebhookService:
                         language=language
                     )
 
-                    # Initialize target_nodes list
-                    base_result['target_nodes'] = []
-                    
-                    # Step 5.1: Prepare target nodes from chunks
-                    for chunk in base_result['chunks']:
-                        # Add class node
-                        base_result['target_nodes'].append({
-                            'class_name': chunk.full_class_name,
-                            'method_name': None,
-                            'branch': base_branch,
-                            'project_id': str(found_project.id)
-                        })
-                        # Add method nodes
-                        for method in chunk.methods:
-                            base_result['target_nodes'].append({
-                                'class_name': chunk.full_class_name,
-                                'method_name': method.name,
-                                'branch': base_branch,
-                                'project_id': str(found_project.id)
-                            })
-                    
-                    logger.info(f"Prepared {len(base_result['target_nodes'])} target nodes for analysis")
-                    
                     # Parse head branch with base branch to compare diff
                     logger.info(f"Parsing PR head branch '{head_branch}' (comparing to main: '{found_project.main_branch}')")
                     head_result = branch_snapshot_service.parse_branch_if_needed(
@@ -371,35 +348,34 @@ class GitHubWebhookService:
                         pull_request_id=str(pr_number)  # Pass PR number as pull_request_id for head branch
                     )
 
-                    # Initialize target_nodes list
-                    head_result['target_nodes'] = []
+                    # Get all existing nodes for this PR from Neo4j
+                    neo4j_service = Container.neo4j_service()
+                    existing_nodes = neo4j_service.get_nodes_by_condition(
+                        project_id=found_project.id,
+                        branch=head_branch,
+                        pull_request_id=str(pr_number)
+                    )
                     
-                    # Step 5.1: Prepare target nodes from chunks
-                    for chunk in head_result['chunks']:
-                        # Add class node
-                        head_result['target_nodes'].append({
-                            'class_name': chunk.full_class_name,
-                            'method_name': None,
-                            'branch': head_branch,
-                            'project_id': str(found_project.id)
-                        })
-                        # Add method nodes
-                        for method in chunk.methods:
-                            head_result['target_nodes'].append({
-                                'class_name': chunk.full_class_name,
-                                'method_name': method.name,
-                                'branch': head_branch,
-                                'project_id': str(found_project.id)
-                            })
+                    logger.info(f"Found {len(existing_nodes)} existing nodes for PR {pr_number} in branch {head_branch}")
                     
-                    logger.info(f"Prepared {len(head_result['target_nodes'])} target nodes for analysis")
-
-                    # we have to check if target node's in head_branch content different from base_branch
-                    # if not different then not insert to neo4j
-                    # get_brach_diff_nodes handles both left and related nodes analysis and returns results
-                    diff_analysis = branch_snapshot_service.get_brach_diff_nodes(head_result['target_nodes'])
+                    # Convert existing_nodes to the format expected by get_brach_diff_nodes
+                    target_nodes = [
+                        {
+                            'class_name': node.get('class_name'),
+                            'method_name': node.get('method_name'),
+                            'branch': node.get('branch'),
+                            'project_id': node.get('project_id')
+                        }
+                        for node in existing_nodes
+                    ]
+                    
+                    diff_analysis = branch_snapshot_service.get_brach_diff_nodes(
+                        target_nodes=target_nodes
+                    )
                     left_results = diff_analysis['left_results']
                     related_results = diff_analysis['related_results']
+                    logger.info(f"left_result {left_results}")
+                    logger.info(f"related_results {related_results}")
                     
                     logger.info(
                         f"Branch parsing complete - "

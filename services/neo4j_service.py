@@ -764,3 +764,96 @@ class Neo4jService:
                 }
                 for record in result
             ]
+
+    def get_nodes_by_condition(
+    self,
+    project_id: int,
+    branch: str,
+    pull_request_id: str = None,
+    node_types: List[str] = None,
+    class_name: str = None,
+    method_name: str = None
+    ) -> List[Dict]:
+        """
+        Get all nodes by various conditions.
+        
+        Args:
+            project_id: Project ID to filter by
+            branch: Branch name to filter by
+            pull_request_id: Optional pull request ID to filter by
+            node_types: Optional list of node types to filter by (e.g., ['ClassNode', 'MethodNode', 'EndpointNode', 'ConfigurationNode'])
+            class_name: Optional class name to filter by (supports partial matching with CONTAINS)
+            method_name: Optional method name to filter by (supports partial matching with CONTAINS)
+            
+        Returns:
+            List of dictionaries containing node properties
+        """
+        where_conditions = [
+            "n.project_id = $project_id",
+            "n.branch = $branch"
+        ]
+        
+        params = {
+            'project_id': str(project_id),
+            'branch': branch
+        }
+        
+        # Add pull_request_id filter if provided
+        if pull_request_id is not None:
+            where_conditions.append("n.pull_request_id = $pull_request_id")
+            params['pull_request_id'] = pull_request_id
+        else:
+            where_conditions.append("n.pull_request_id IS NULL")
+        
+        # Add node type filter if provided
+        if node_types:
+            # Sử dụng ANY để check label thay vì labels(n)[0]
+            node_type_conditions = " OR ".join([f"$node_type_{i} IN labels(n)" for i in range(len(node_types))])
+            where_conditions.append(f"({node_type_conditions})")
+            for i, node_type in enumerate(node_types):
+                params[f'node_type_{i}'] = node_type
+        
+        # Add class_name filter if provided (chỉ filter khi property tồn tại)
+        if class_name:
+            where_conditions.append("(n.class_name IS NOT NULL AND n.class_name CONTAINS $class_name)")
+            params['class_name'] = class_name
+        
+        # Add method_name filter if provided (chỉ filter khi property tồn tại)
+        if method_name:
+            where_conditions.append("(n.method_name IS NOT NULL AND n.method_name CONTAINS $method_name)")
+            params['method_name'] = method_name
+        
+        query = f"""
+        MATCH (n)
+        WHERE {' AND '.join(where_conditions)}
+        RETURN n
+        ORDER BY 
+            CASE WHEN n.class_name IS NOT NULL THEN n.class_name ELSE '' END,
+            CASE WHEN n.method_name IS NOT NULL THEN n.method_name ELSE '' END
+        """
+        
+        try:
+            with self.db.driver.session() as session:
+                result = session.run(query, params)
+                nodes = []
+                for record in result:
+                    node_data = record['n']
+                    node = dict(node_data)
+                    
+                    # Add node type information - lấy label đầu tiên
+                    labels = list(node_data.labels) if hasattr(node_data, 'labels') and node_data.labels else []
+                    node['node_type'] = labels[0] if labels else None
+                    node['all_labels'] = labels  # Thêm tất cả labels để debug
+                    
+                    nodes.append(node)
+                
+                logger.info(
+                    f"Retrieved {len(nodes)} nodes for project_id={project_id}, "
+                    f"branch={branch}, pull_request_id={pull_request_id}, "
+                    f"node_types={node_types}, class_name={class_name}, method_name={method_name}"
+                )
+                return nodes
+                
+        except Exception as e:
+            logger.error(f"Failed to get nodes by condition: {str(e)}", exc_info=True)
+            raise
