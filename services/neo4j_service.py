@@ -67,6 +67,7 @@ class Neo4jService:
                     'file_path': file_path,
                     'class_name': class_name,
                     'content': content,
+                    'ast_hash': chunk.ast_hash,
                     'project_id': str(chunk.project_id),
                     'branch': chunk.branch
                 }
@@ -105,6 +106,7 @@ class Neo4jService:
                         'class_name': method_class_name,
                         'method_name': method_name,
                         'content': method_content,
+                        'ast_hash': method.ast_hash,
                         'project_id': str(method.project_id),
                         'branch': method.branch
                     }
@@ -214,10 +216,9 @@ class Neo4jService:
                     class_name: node.class_name,
                     project_id: node.project_id,
                     branch: $main_branch,
-                    ast_hash: node.ast_hash,
                     method_name: CASE WHEN node.method_name IS NOT NULL THEN node.method_name ELSE null END
                 })
-                WHERE main_node IS NULL
+                WHERE main_node IS NULL OR main_node.ast_hash <> node.ast_hash
                 CALL apoc.create.node([node.node_type], {
                     file_path: node.file_path,
                     class_name: node.class_name,
