@@ -56,7 +56,7 @@ class BaseCodeAnalyzer(ABC):
         chunks: List[CodeChunk] = []
 
         # Build cache for all files (needed for cross-references)
-        self.build_source_cache(root, target_files)
+        self.build_source_cache(root)
 
         # Process files sequentially (no threading for LSP compatibility)
         logger.info("Processing files sequentially")
@@ -284,10 +284,9 @@ class BaseCodeAnalyzer(ABC):
         logger.info(f"Filtered to {len(filtered_files)} files based on target_files")
         return filtered_files
 
-    def build_source_cache(self, root, target_files: Optional[List[str]]) -> Dict[str, ClassParsingContext]:
+    def build_source_cache(self, root) -> Dict[str, ClassParsingContext]:
         # Get all code files and filter by target_files if provided
         code_files = self._get_code_files(root)
-        code_files = self._filter_files_by_targets(code_files, target_files)
         cached_nodes = {}
 
         # Process cache building sequentially (no threading for LSP compatibility)

@@ -582,7 +582,7 @@ class Neo4jService:
         target_nodes: List[Dict[str, str]],
         max_level: int = 20,
         relationship_filter: str = "CALL>|<IMPLEMENT|<EXTEND|USE>",
-        min_level: int = 0
+        min_level: int = 1 # at least one relation with other nodes
     ) -> List[Dict]:
         """
         Get all nodes related to a list of target nodes by traversing relationships.
@@ -595,7 +595,7 @@ class Neo4jService:
                 - project_id: str
             max_level: Maximum traversal depth (default: 20)
             relationship_filter: Relationship filter for APOC (default: "CALL>|<IMPLEMENT|<EXTEND|USE>")
-            min_level: Minimum traversal depth (default: 0)
+            min_level: Minimum traversal depth (default: 1)
             
         Returns:
             List of dicts containing:
@@ -674,8 +674,7 @@ class Neo4jService:
         self,
         target_nodes: List[Dict[str, str]],
         max_level: int = 20,
-        relationship_filter: str = "<CALL|IMPLEMENT>|EXTEND>|<USE",
-        min_level: int = 0
+        min_level: int = 1 # at least one relation with other nodes
     ) -> List[Dict]:
         """
         Get all left target nodes (incoming relationships) for a list of target nodes.
@@ -705,7 +704,6 @@ class Neo4jService:
         WHERE endpoint.project_id = $targets[0].project_id
         AND any(t IN targets WHERE
           t.class_name = endpoint.class_name AND
-          t.branch = endpoint.branch AND
           (
             (t.method_name IS NULL AND endpoint.method_name IS NULL)
             OR (t.method_name = endpoint.method_name)
@@ -713,7 +711,7 @@ class Neo4jService:
         )
         
         CALL apoc.path.expandConfig(endpoint, {
-          relationshipFilter: $relationship_filter,
+          relationshipFilter: '<CALL|IMPLEMENT>|EXTEND>|<USE',
           minLevel: $min_level,
           maxLevel: $max_level,
           bfs: true,
@@ -749,7 +747,6 @@ class Neo4jService:
         
         params = {
             'targets': target_nodes,
-            'relationship_filter': relationship_filter,
             'min_level': min_level,
             'max_level': max_level
         }
