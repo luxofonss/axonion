@@ -231,11 +231,11 @@ class JavaCodeAnalyzerConstant:
 
 class JavaCodeAnalyzer(BaseCodeAnalyzer):
 
-    def __init__(self, root_path: str = None, project_id: str = None, branch: str = None, max_workers: int = 8):
+    def __init__(self, root_path: str = None, project_id: str = None, branch: str = None):
         # Tree-sitter setup
         language: Language = get_language("java")
         parser = Parser(language)
-        super().__init__(language, parser, project_id, branch, max_workers)
+        super().__init__(language, parser, project_id, branch)
 
         # Services
         self.comment_remover = JavaCommentRemover()

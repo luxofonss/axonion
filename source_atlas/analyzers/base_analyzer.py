@@ -2,9 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from threading import Lock
 from typing import List, Optional, Dict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from loguru import logger
 from tree_sitter import Language, Parser, Node
@@ -28,16 +26,14 @@ class ClassParsingContext:
 
 class BaseCodeAnalyzer(ABC):
 
-    def __init__(self, language: Language, parser: Parser, project_id: str, branch: str, max_workers: int = 8):
+    def __init__(self, language: Language, parser: Parser, project_id: str, branch: str):
         self.language = language
         self.parser = parser
         self.comment_remover = None
-        self.max_workers = max_workers
         self.project_id = project_id
         self.branch = branch
         self.cached_nodes = {}
         self.methods_cache = {}
-        self._lock = Lock()
         self.lsp_service: LSPService = None
 
     def parse_project(self, root: Path, target_files: Optional[List[str]] = None, parse_all: bool = True, export_output: bool = True) -> List[CodeChunk]:
@@ -62,23 +58,15 @@ class BaseCodeAnalyzer(ABC):
         # Build cache for all files (needed for cross-references)
         self.build_source_cache(root, target_files)
 
-        # Process files in parallel using ThreadPoolExecutor
-        logger.info(f"Processing files with {self.max_workers} workers")
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            # Submit all file processing tasks
-            future_to_file = {executor.submit(self.process_file, file): file for file in code_files}
-            
-            # Collect results as they complete
-            for i, future in enumerate(as_completed(future_to_file), 1):
-                file = future_to_file[future]
-                try:
-                    file_chunks = future.result()
-                    # Thread-safe append using lock
-                    with self._lock:
-                        chunks.extend(file_chunks)
-                    logger.debug(f"[{i}/{len(code_files)}] Completed processing: {file}")
-                except Exception as e:
-                    logger.error(f"Error processing {file}: {e}", exc_info=True)
+        # Process files sequentially (no threading for LSP compatibility)
+        logger.info("Processing files sequentially")
+        for i, file in enumerate(code_files, 1):
+            try:
+                file_chunks = self.process_file(file)
+                chunks.extend(file_chunks)
+                logger.debug(f"[{i}/{len(code_files)}] Completed processing: {file}")
+            except Exception as e:
+                logger.error(f"Error processing {file}: {e}", exc_info=True)
 
         logger.info(f"Extracted {len(chunks)} code chunks total")
 
@@ -302,21 +290,15 @@ class BaseCodeAnalyzer(ABC):
         code_files = self._filter_files_by_targets(code_files, target_files)
         cached_nodes = {}
 
-        # Process cache building in parallel for better performance
-        logger.info(f"Building source cache with {self.max_workers} workers")
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_file = {executor.submit(self.process_class_cache_file, file): file for file in code_files}
-            
-            for i, future in enumerate(as_completed(future_to_file), 1):
-                file = future_to_file[future]
-                try:
-                    cache_data = future.result()
-                    # Thread-safe update
-                    with self._lock:
-                        cached_nodes.update(cache_data)
-                    logger.debug(f"[{i}/{len(code_files)}] Cached: {file}")
-                except Exception as e:
-                    logger.error(f"Error caching {file}: {e}", exc_info=True)
+        # Process cache building sequentially (no threading for LSP compatibility)
+        logger.info("Building source cache sequentially")
+        for i, file in enumerate(code_files, 1):
+            try:
+                cache_data = self.process_class_cache_file(file)
+                cached_nodes.update(cache_data)
+                logger.debug(f"[{i}/{len(code_files)}] Cached: {file}")
+            except Exception as e:
+                logger.error(f"Error caching {file}: {e}", exc_info=True)
 
         self.cached_nodes = cached_nodes
         logger.info(f"Cache built with {len(cached_nodes)} classes")

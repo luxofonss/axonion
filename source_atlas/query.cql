@@ -75,6 +75,63 @@ RETURN endpoint, path,
 ORDER BY path;
 
 
+WITH [
+  {class_name:'com.edu.onestudy.service.test.ResourceServiceImpl',
+  method_name:'com.edu.onestudy.service.test.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)'},
+  {class_name: 'com.edu.onestudy.service.impl.ResourceServiceImpl'},
+  {class_name: 'com.edu.onestudy.service.impl.ResourceServiceImpl', method_name: 'com.edu.onestudy.service.impl.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)'},
+  {class_name: 'com.edu.onestudy.repository.QuizAttemptRepository'},
+  {class_name: 'com.edu.onestudy.service.impl.QuizServiceImpl'},
+  {class_name: 'com.edu.onestudy.service.impl.QuizServiceImpl', method_name:'com.edu.onestudy.service.impl.QuizServiceImpl.updateQuiz(CreateQuizDto request)'},
+  {class_name: 'com.edu.onestudy.service.impl.QuizServiceImpl', method_name:'com.edu.onestudy.service.impl.QuizServiceImpl.submitQuizQuestion(String attemptId, SubmitAnswerRequest request, UUID id)'},
+  {class_name: 'com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl'},
+  {class_name: 'com.edu.onestudy.service.test.ResourceServiceImpl'}
+] AS targets
+
+        
+        MATCH (endpoint)
+        WHERE any(t IN targets WHERE
+          t.class_name = endpoint.class_name AND
+          (
+            (t.method_name IS NULL AND endpoint.method_name IS NULL)
+            OR (t.method_name = endpoint.method_name)
+          )
+        )
+        
+        CALL apoc.path.expandConfig(endpoint, {
+          relationshipFilter: 'CALL>|USE|IMPLEMENT|EXTEND>',
+          minLevel: 1,
+          maxLevel: 20,
+          bfs: true,
+          uniqueness: "NODE_GLOBAL",
+          filterStartNode: false
+        }) YIELD path
+        
+        WITH endpoint, path,
+             nodes(path) AS node_list,
+             relationships(path) AS rel_list
+        
+        WITH endpoint, path, node_list, rel_list,
+             [i IN range(0, size(rel_list)-1) |
+                CASE
+                  WHEN type(rel_list[i]) = 'CALL'
+                       AND node_list[i+1].method_name IS NOT NULL
+                  THEN node_list[i+1]
+                  
+                  WHEN type(rel_list[i]) IN ['IMPLEMENT', 'EXTEND']
+                  THEN node_list[i+1]
+                  
+                  WHEN type(rel_list[i]) = 'USE'
+                       AND node_list[i+1].method_name IS NULL
+                  THEN node_list[i+1]
+                  ELSE null
+                END
+             ] AS filtered_nodes
+        
+        RETURN endpoint, path,
+               [node IN filtered_nodes WHERE node IS NOT NULL] AS visited_nodes
+        ORDER BY path
+
 
 
 

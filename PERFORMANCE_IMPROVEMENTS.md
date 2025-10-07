@@ -2,36 +2,38 @@
 
 ## ✅ Các Cải Tiến Đã Thực Hiện
 
-### 1. **Parallel File Processing với ThreadPoolExecutor**
+### 1. **Sequential File Processing (LSP Compatible)**
 
 #### Thay Đổi:
 - **File**: `source_atlas/analyzers/base_analyzer.py`
 - **Trước**: Xử lý files tuần tự (sequential)
-- **Sau**: Xử lý parallel với ThreadPoolExecutor
+- **Sau**: Xử lý tuần tự để tương thích với LSP (không dùng threading)
 
 #### Chi Tiết:
 ```python
-# Build cache - song song
-with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-    future_to_file = {executor.submit(self.process_class_cache_file, file): file for file in code_files}
-    for i, future in enumerate(as_completed(future_to_file), 1):
-        cache_data = future.result()
-        with self._lock:  # Thread-safe
-            cached_nodes.update(cache_data)
+# Build cache - sequential (LSP compatible)
+for i, file in enumerate(code_files, 1):
+    try:
+        cache_data = self.process_class_cache_file(file)
+        cached_nodes.update(cache_data)
+        logger.debug(f"[{i}/{len(code_files)}] Cached: {file}")
+    except Exception as e:
+        logger.error(f"Error caching {file}: {e}", exc_info=True)
 
-# Process files - song song
-with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-    future_to_file = {executor.submit(self.process_file, file): file for file in code_files}
-    for i, future in enumerate(as_completed(future_to_file), 1):
-        file_chunks = future.result()
-        with self._lock:  # Thread-safe
-            chunks.extend(file_chunks)
+# Process files - sequential (LSP compatible)
+for i, file in enumerate(code_files, 1):
+    try:
+        file_chunks = self.process_file(file)
+        chunks.extend(file_chunks)
+        logger.debug(f"[{i}/{len(code_files)}] Completed processing: {file}")
+    except Exception as e:
+        logger.error(f"Error processing {file}: {e}", exc_info=True)
 ```
 
 #### Lợi Ích:
-- **Tốc độ**: Tăng 4-8x tùy theo số CPU cores
-- **Scalability**: Có thể adjust `max_workers` parameter (mặc định = 8)
-- **Thread-safe**: Sử dụng lock để đảm bảo an toàn khi nhiều threads truy cập shared data
+- **LSP Compatibility**: Không có xung đột với LSP operations
+- **Stability**: Tránh race conditions và threading issues
+- **Reliability**: Đảm bảo LSP calls hoạt động ổn định
 
 ---
 

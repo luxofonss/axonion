@@ -1,233 +1,5 @@
 [
   {
-    "package": "com.edu.onestudy.repository.impl",
-    "class_name": "QuizAnswerRepositoryImpl",
-    "full_class_name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl",
-    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\repository\\impl\\QuizAnswerRepositoryImpl.java",
-    "content": "@Repository\npublic class QuizAnswerRepositoryImpl implements QuizAnswerRepository {\n\n    private final JpaQuizAnswerRepository repository;\n\n    public QuizAnswerRepositoryImpl(JpaQuizAnswerRepository repository) {\n        this.repository = repository;\n    }\n\n    @Override\n    public QuizAnswer save(QuizAnswer answer) {\n        return repository.save(answer);\n    }\n\n    @Override\n    public void saveAll(List<QuizAnswer> answers) {\n        repository.saveAll(answers);\n    }\n\n    @Override\n    public Optional<QuizAnswer> findById(String id) {\n        return repository.findById(UUID.fromString(id));\n    }\n\n    @Override\n    public List<QuizAnswer> findByQuizAttemptId(String attemptId) {\n        \n        return repository.findByQuizAttemptId(UUID.fromString(attemptId));\n    }\n\n    @Override\n    public void delete(QuizAnswer oldAnswer) {\n        repository.delete(oldAnswer);\n    }\n}",
-    "ast_hash": "566d2da330797aea0524e236e3a77394",
-    "implements": [],
-    "methods": [
-      {
-        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.save(QuizAnswer answer)",
-        "body": "@Override\n    public QuizAnswer save(QuizAnswer answer) {\n        return repository.save(answer);\n    }",
-        "ast_hash": "83978bc44c098a9e2f4746f36cd791c0",
-        "method_calls": [],
-        "used_types": [
-          "com.edu.onestudy.entity.QuizAnswer"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      },
-      {
-        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.saveAll(List<QuizAnswer> answers)",
-        "body": "@Override\n    public void saveAll(List<QuizAnswer> answers) {\n        repository.saveAll(answers);\n    }",
-        "ast_hash": "4010746acf86eb09a2f306518b552e8e",
-        "method_calls": [],
-        "used_types": [
-          "com.edu.onestudy.entity.QuizAnswer"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      },
-      {
-        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.findById(String id)",
-        "body": "@Override\n    public Optional<QuizAnswer> findById(String id) {\n        return repository.findById(UUID.fromString(id));\n    }",
-        "ast_hash": "4c4583af6501178aacaf0150822a60f1",
-        "method_calls": [],
-        "used_types": [
-          "com.edu.onestudy.entity.QuizAnswer"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      },
-      {
-        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.findByQuizAttemptId(String attemptId)",
-        "body": "@Override\n    public List<QuizAnswer> findByQuizAttemptId(String attemptId) {\n        \n        return repository.findByQuizAttemptId(UUID.fromString(attemptId));\n    }",
-        "ast_hash": "4c4583af6501178aacaf0150822a60f1",
-        "method_calls": [
-          {
-            "name": "com.edu.onestudy.repository.impl.JpaQuizAnswerRepository.findByQuizAttemptId(UUID quizAttemptId)",
-            "params": []
-          }
-        ],
-        "used_types": [
-          "com.edu.onestudy.entity.QuizAnswer"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      },
-      {
-        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.delete(QuizAnswer oldAnswer)",
-        "body": "@Override\n    public void delete(QuizAnswer oldAnswer) {\n        repository.delete(oldAnswer);\n    }",
-        "ast_hash": "8e817f44ea9f865e8f31a5ef08088d61",
-        "method_calls": [],
-        "used_types": [
-          "com.edu.onestudy.entity.QuizAnswer"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      }
-    ],
-    "parent_class": [
-      null
-    ],
-    "project_id": "1",
-    "branch": "develop",
-    "is_nested": false,
-    "type": "regular"
-  },
-  {
-    "package": "com.edu.onestudy.service.test",
-    "class_name": "ResourceServiceImpl",
-    "full_class_name": "com.edu.onestudy.service.test.ResourceServiceImpl",
-    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\test\\ResourceServiceImpl.java",
-    "content": "@Service\n@Slf4j\npublic class ResourceServiceImpl {\n\n    private final ResourceRepository resourceRepository;\n\n    private final StorageService storageService;\n\n    public ResourceServiceImpl(StorageFactory storageFactory, ResourceRepository resourceRepository) {\n        this.resourceRepository = resourceRepository;\n        this.storageService = storageFactory.getStorageService(Constant.STORAGE_AWS);\n    }\n\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n        List<Resource> lst = new ArrayList<>();\n        List<String> test2 = lst.stream().map(Resource::getId).map(UUID::toString).collect(Collectors.toList());\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }\n\n}",
-    "ast_hash": "691456d1d12a3516589cd055cab7648f",
-    "implements": [],
-    "methods": [
-      {
-        "name": "com.edu.onestudy.service.test.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)",
-        "body": "public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n        List<Resource> lst = new ArrayList<>();\n        List<String> test2 = lst.stream().map(Resource::getId).map(UUID::toString).collect(Collectors.toList());\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }",
-        "ast_hash": "c5e067de2ecdaed9fcff6933a659ff4b",
-        "method_calls": [
-          {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.ResourceRepository.save(Resource resource)",
-            "params": []
-          }
-        ],
-        "used_types": [
-          "com.edu.onestudy.entity.Resource"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      }
-    ],
-    "parent_class": [
-      null
-    ],
-    "project_id": "1",
-    "branch": "develop",
-    "is_nested": false,
-    "type": "regular"
-  },
-  {
-    "package": "com.edu.onestudy.service.impl",
-    "class_name": "ResourceServiceImpl",
-    "full_class_name": "com.edu.onestudy.service.impl.ResourceServiceImpl",
-    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\impl\\ResourceServiceImpl.java",
-    "content": "@Service\n@Slf4j\npublic class ResourceServiceImpl implements ResourceService {\n\n    private final ResourceRepository resourceRepository;\n\n    private final StorageService storageService;\n\n    public ResourceServiceImpl(StorageFactory storageFactory, ResourceRepository resourceRepository) {\n        this.resourceRepository = resourceRepository;\n        this.storageService = storageFactory.getStorageService(Constant.STORAGE_AWS);\n    }\n\n    @Override\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }\n\n    @Override\n    public GetResourceResponse getResource(String id, UUID requestId) {\n        Resource resource = resourceRepository.findById(requestId.toString());\n\n        if (Objects.isNull(resource)) {\n            throw new RuntimeException(\"Resource not found\");\n        }\n\n        try {\n            if (!requestId.equals(resource.getOwnerId())) {\n                throw new RuntimeException(\"You are not allowed to access this resource\");\n            }\n\n            String url = storageService.getFileUrl(resource.getUrl());\n\n            return GetResourceResponse.builder()\n                    .name(resource.getName())\n                    .url(url)\n                    .build();\n\n        } catch (Exception e) {\n            log.info(\"Generate url failed {}\", e.getMessage());\n            throw new RuntimeException(\"Generate url failed\");\n        }\n    }\n\n    @Override\n    public File downloadResourceFromUrl(String urlString) {\n        try {\n            URI uri = URI.create(urlString);\n            URL url = uri.toURL();\n\n            String fileName = Path.of(uri.getPath()).getFileName().toString();\n            File outputFile = File.createTempFile(\"download_\", \"_\" + fileName);\n\n            try (InputStream in = url.openStream();\n                 FileOutputStream out = new FileOutputStream(outputFile)) {\n                byte[] buffer = new byte[8192];\n                int bytesRead;\n                while ((bytesRead = in.read(buffer)) != -1) {\n                    out.write(buffer, 0, bytesRead);\n                }\n            }\n\n            return outputFile;\n\n        } catch (IOException e) {\n            throw new RuntimeException(\"Failed to download file from URL: \" + urlString, e);\n        }\n    }\n}",
-    "ast_hash": "c27aa4dd5d8ab847d64b2c1a7c746397",
-    "implements": [],
-    "methods": [
-      {
-        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)",
-        "body": "@Override\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }",
-        "ast_hash": "8cfcf54c23a44af43e90023da229f003",
-        "method_calls": [
-          {
-            "name": "com.edu.onestudy.repository.ResourceRepository.save(Resource resource)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
-            "params": []
-          }
-        ],
-        "used_types": [
-          "com.edu.onestudy.entity.Resource"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      },
-      {
-        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.getResource(String id, UUID requestId)",
-        "body": "@Override\n    public GetResourceResponse getResource(String id, UUID requestId) {\n        Resource resource = resourceRepository.findById(requestId.toString());\n\n        if (Objects.isNull(resource)) {\n            throw new RuntimeException(\"Resource not found\");\n        }\n\n        try {\n            if (!requestId.equals(resource.getOwnerId())) {\n                throw new RuntimeException(\"You are not allowed to access this resource\");\n            }\n\n            String url = storageService.getFileUrl(resource.getUrl());\n\n            return GetResourceResponse.builder()\n                    .name(resource.getName())\n                    .url(url)\n                    .build();\n\n        } catch (Exception e) {\n            log.info(\"Generate url failed {}\", e.getMessage());\n            throw new RuntimeException(\"Generate url failed\");\n        }\n    }",
-        "ast_hash": "d30372baa62bcf9c03dc634a925dcca8",
-        "method_calls": [
-          {
-            "name": "com.edu.onestudy.repository.ResourceRepository.findById(String id)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getFileUrl(String fileName)",
-            "params": []
-          }
-        ],
-        "used_types": [
-          "com.edu.onestudy.entity.Resource",
-          "com.edu.onestudy.dto.resource.GetResourceResponse"
-        ],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      },
-      {
-        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.downloadResourceFromUrl(String urlString)",
-        "body": "@Override\n    public File downloadResourceFromUrl(String urlString) {\n        try {\n            URI uri = URI.create(urlString);\n            URL url = uri.toURL();\n\n            String fileName = Path.of(uri.getPath()).getFileName().toString();\n            File outputFile = File.createTempFile(\"download_\", \"_\" + fileName);\n\n            try (InputStream in = url.openStream();\n                 FileOutputStream out = new FileOutputStream(outputFile)) {\n                byte[] buffer = new byte[8192];\n                int bytesRead;\n                while ((bytesRead = in.read(buffer)) != -1) {\n                    out.write(buffer, 0, bytesRead);\n                }\n            }\n\n            return outputFile;\n\n        } catch (IOException e) {\n            throw new RuntimeException(\"Failed to download file from URL: \" + urlString, e);\n        }\n    }",
-        "ast_hash": "ff540b8b74816f9b4254e2cd435df696",
-        "method_calls": [],
-        "used_types": [],
-        "field_access": [],
-        "inheritance_info": [],
-        "endpoint": [],
-        "type": "regular",
-        "project_id": "1",
-        "branch": "develop"
-      }
-    ],
-    "parent_class": [
-      null
-    ],
-    "project_id": "1",
-    "branch": "develop",
-    "is_nested": false,
-    "type": "regular"
-  },
-  {
     "package": "com.edu.onestudy.repository",
     "class_name": "QuizAttemptRepository",
     "full_class_name": "com.edu.onestudy.repository.QuizAttemptRepository",
@@ -333,6 +105,104 @@
     "type": "regular"
   },
   {
+    "package": "com.edu.onestudy.repository.impl",
+    "class_name": "QuizAnswerRepositoryImpl",
+    "full_class_name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\repository\\impl\\QuizAnswerRepositoryImpl.java",
+    "content": "@Repository\npublic class QuizAnswerRepositoryImpl implements QuizAnswerRepository {\n\n    private final JpaQuizAnswerRepository repository;\n\n    public QuizAnswerRepositoryImpl(JpaQuizAnswerRepository repository) {\n        this.repository = repository;\n    }\n\n    @Override\n    public QuizAnswer save(QuizAnswer answer) {\n        return repository.save(answer);\n    }\n\n    @Override\n    public void saveAll(List<QuizAnswer> answers) {\n        repository.saveAll(answers);\n    }\n\n    @Override\n    public Optional<QuizAnswer> findById(String id) {\n        return repository.findById(UUID.fromString(id));\n    }\n\n    @Override\n    public List<QuizAnswer> findByQuizAttemptId(String attemptId) {\n        \n        return repository.findByQuizAttemptId(UUID.fromString(attemptId));\n    }\n\n    @Override\n    public void delete(QuizAnswer oldAnswer) {\n        repository.delete(oldAnswer);\n    }\n}",
+    "ast_hash": "566d2da330797aea0524e236e3a77394",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.save(QuizAnswer answer)",
+        "body": "@Override\n    public QuizAnswer save(QuizAnswer answer) {\n        return repository.save(answer);\n    }",
+        "ast_hash": "83978bc44c098a9e2f4746f36cd791c0",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.saveAll(List<QuizAnswer> answers)",
+        "body": "@Override\n    public void saveAll(List<QuizAnswer> answers) {\n        repository.saveAll(answers);\n    }",
+        "ast_hash": "4010746acf86eb09a2f306518b552e8e",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.findById(String id)",
+        "body": "@Override\n    public Optional<QuizAnswer> findById(String id) {\n        return repository.findById(UUID.fromString(id));\n    }",
+        "ast_hash": "4c4583af6501178aacaf0150822a60f1",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.findByQuizAttemptId(String attemptId)",
+        "body": "@Override\n    public List<QuizAnswer> findByQuizAttemptId(String attemptId) {\n        \n        return repository.findByQuizAttemptId(UUID.fromString(attemptId));\n    }",
+        "ast_hash": "4c4583af6501178aacaf0150822a60f1",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.impl.JpaQuizAnswerRepository.findByQuizAttemptId(UUID quizAttemptId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.repository.impl.QuizAnswerRepositoryImpl.delete(QuizAnswer oldAnswer)",
+        "body": "@Override\n    public void delete(QuizAnswer oldAnswer) {\n        repository.delete(oldAnswer);\n    }",
+        "ast_hash": "8e817f44ea9f865e8f31a5ef08088d61",
+        "method_calls": [],
+        "used_types": [
+          "com.edu.onestudy.entity.QuizAnswer"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
     "package": "com.edu.onestudy.service.impl",
     "class_name": "QuizServiceImpl",
     "full_class_name": "com.edu.onestudy.service.impl.QuizServiceImpl",
@@ -347,11 +217,11 @@
         "ast_hash": "578fc63abb1c7d1cf1e764c940d8b6e9",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
+            "name": "com.edu.onestudy.mapper.QuizMapper.createQuizDtoToQuiz(CreateQuizDto request)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.mapper.QuizMapper.createQuizDtoToQuiz(CreateQuizDto request)",
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
             "params": []
           }
         ],
@@ -373,7 +243,7 @@
         "ast_hash": "810076e33292f6b06e9014a1f0a1e03a",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "name": "com.edu.onestudy.mapper.QuestionMapper.updateQuestionFromDto(QuestionDto dto, @MappingTarget Question entity)",
             "params": []
           },
           {
@@ -381,15 +251,7 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuestionRepository.saveAll(List<Question> questions)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.mapper.QuestionMapper.updateQuestionFromDto(QuestionDto dto, @MappingTarget Question entity)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
+            "name": "com.edu.onestudy.mapper.QuizMapper.createQuizDtoToQuiz(CreateQuizDto request)",
             "params": []
           },
           {
@@ -397,14 +259,34 @@
             "params": []
           },
           {
+            "name": "com.edu.onestudy.repository.QuestionRepository.countByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.mapper.QuestionMapper.questionDtoToQuestion(QuestionDto dto)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
             "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.saveAll(List<Question> questions)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Question",
           "com.edu.onestudy.dto.quiz.CreateQuizDto",
           "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.entity.Question",
           "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [
@@ -475,7 +357,7 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
             "params": []
           }
         ],
@@ -498,11 +380,11 @@
         "ast_hash": "57b8c1f636623361e78b2b1b024b6cd5",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
             "params": []
           }
         ],
@@ -524,21 +406,21 @@
         "ast_hash": "1e88121ae41e99366aa70ca3d59cbe5d",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.QuizAttempt",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.entity.QuizAttempt"
         ],
         "field_access": [
-          "BigDecimal ZERO",
-          "int QUIZ_NOT_FOUND = 4040002"
+          "int QUIZ_NOT_FOUND = 4040002",
+          "BigDecimal ZERO"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -552,27 +434,15 @@
         "ast_hash": "721364ccd79b03c69a36d7e07ec5c7aa",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.utils.JsonUtils.toJsonString(Object input)",
+            "name": "com.edu.onestudy.repository.QuestionRepository.findById(String id)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
+            "name": "com.edu.onestudy.utils.FileUtils.convertToBase64(File file)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationServiceImpl.getAccuracy(PronunciationAccuracyRequestDto request)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.service.ResourceService.downloadResourceFromUrl(String url)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
             "params": []
           },
           {
@@ -584,37 +454,49 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuestionRepository.findById(String id)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.utils.FileUtils.convertToBase64(File file)",
+            "name": "com.edu.onestudy.service.ResourceService.downloadResourceFromUrl(String url)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationServiceImpl.getAccuracy(PronunciationAccuracyRequestDto request)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.utils.JsonUtils.toJsonString(Object input)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
-          "com.edu.onestudy.entity.QuestionOption",
-          "com.edu.onestudy.entity.Question",
-          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
           "com.edu.onestudy.entity.QuizAnswer",
-          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest",
           "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.entity.QuizAttempt"
+          "com.edu.onestudy.entity.QuestionOption",
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
+          "com.edu.onestudy.entity.Question",
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.entity.QuizAttempt",
+          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest"
         ],
         "field_access": [
-          "int QUIZ_NOT_FOUND = 4040002",
-          "MULTIPLE_CHOICE",
-          "int QUIZ_TIME_LIMIT_EXCEEDED = 4040008",
           "int QUESTION_DOES_NOT_BELONG_TO_QUIZ = 4040005",
+          "MULTIPLE_CHOICE",
           "PrintStream err",
+          "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
           "int QUESTION_NOT_FOUND = 4040006",
-          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003",
-          "int QUIZ_ATTEMPT_SUBMITTED = 4040004"
+          "int QUIZ_NOT_FOUND = 4040002",
+          "int QUIZ_TIME_LIMIT_EXCEEDED = 4040008",
+          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -628,11 +510,11 @@
         "ast_hash": "a8f7e06070203f707da5c36b962b6512",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByUserId(UUID id)",
+            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByUserId(UUID id)",
             "params": []
           }
         ],
@@ -653,19 +535,19 @@
         "ast_hash": "ac2f399703908b8eb6cc514a92d89dd4",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getById(String id)",
-            "params": []
-          },
-          {
             "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
             "params": []
           },
           {
             "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getById(String id)",
             "params": []
           }
         ],
@@ -689,11 +571,11 @@
         "ast_hash": "464128d55d82ada4c7fa5e5669f5143a",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.save(QuizAttempt attempt)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
             "params": []
           }
         ],
@@ -701,8 +583,8 @@
           "com.edu.onestudy.entity.QuizAttempt"
         ],
         "field_access": [
-          "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
           "int QUIZ_ATTEMPT_NOT_BELONG_TO_USER = 4040007",
+          "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
           "int QUIZ_ATTEMPT_NOT_FOUND = 4040003"
         ],
         "inheritance_info": [],
@@ -717,18 +599,6 @@
         "ast_hash": "5a509f0d3d059c74623daba02f2b727d",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
-            "params": []
-          },
-          {
             "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByQuizId(String id)",
             "params": []
           },
@@ -737,14 +607,26 @@
             "params": []
           },
           {
+            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
             "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
             "params": []
           }
         ],
         "used_types": [
           "com.edu.onestudy.entity.User",
-          "com.edu.onestudy.entity.QuizAttempt",
           "com.edu.onestudy.entity.Question",
+          "com.edu.onestudy.entity.QuizAttempt",
           "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [
@@ -780,15 +662,11 @@
         "ast_hash": "fc15b5c2571900eafa6c53844f241ae3",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByUserId(String userId)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
-            "params": []
-          },
-          {
             "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByUserId(String userId)",
             "params": []
           }
         ],
@@ -809,11 +687,11 @@
         "ast_hash": "1c77f1d4a9bb5c525ac5f8ff1747d8aa",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.SavedQuizRepository.update(UserSavedQuiz savedQuiz)",
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByQuizId(String quizId)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByQuizId(String quizId)",
+            "name": "com.edu.onestudy.repository.SavedQuizRepository.update(UserSavedQuiz savedQuiz)",
             "params": []
           }
         ],
@@ -865,6 +743,136 @@
         ],
         "used_types": [
           "com.edu.onestudy.entity.Quiz"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.edu.onestudy.service.impl",
+    "class_name": "ResourceServiceImpl",
+    "full_class_name": "com.edu.onestudy.service.impl.ResourceServiceImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\impl\\ResourceServiceImpl.java",
+    "content": "@Service\n@Slf4j\npublic class ResourceServiceImpl implements ResourceService {\n\n    private final ResourceRepository resourceRepository;\n\n    private final StorageService storageService;\n\n    public ResourceServiceImpl(StorageFactory storageFactory, ResourceRepository resourceRepository) {\n        this.resourceRepository = resourceRepository;\n        this.storageService = storageFactory.getStorageService(Constant.STORAGE_AWS);\n    }\n\n    @Override\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }\n\n    @Override\n    public GetResourceResponse getResource(String id, UUID requestId) {\n        Resource resource = resourceRepository.findById(requestId.toString());\n\n        if (Objects.isNull(resource)) {\n            throw new RuntimeException(\"Resource not found\");\n        }\n\n        try {\n            if (!requestId.equals(resource.getOwnerId())) {\n                throw new RuntimeException(\"You are not allowed to access this resource\");\n            }\n\n            String url = storageService.getFileUrl(resource.getUrl());\n\n            return GetResourceResponse.builder()\n                    .name(resource.getName())\n                    .url(url)\n                    .build();\n\n        } catch (Exception e) {\n            log.info(\"Generate url failed {}\", e.getMessage());\n            throw new RuntimeException(\"Generate url failed\");\n        }\n    }\n\n    @Override\n    public File downloadResourceFromUrl(String urlString) {\n        try {\n            URI uri = URI.create(urlString);\n            URL url = uri.toURL();\n\n            String fileName = Path.of(uri.getPath()).getFileName().toString();\n            File outputFile = File.createTempFile(\"download_\", \"_\" + fileName);\n\n            try (InputStream in = url.openStream();\n                 FileOutputStream out = new FileOutputStream(outputFile)) {\n                byte[] buffer = new byte[8192];\n                int bytesRead;\n                while ((bytesRead = in.read(buffer)) != -1) {\n                    out.write(buffer, 0, bytesRead);\n                }\n            }\n\n            return outputFile;\n\n        } catch (IOException e) {\n            throw new RuntimeException(\"Failed to download file from URL: \" + urlString, e);\n        }\n    }\n}",
+    "ast_hash": "c27aa4dd5d8ab847d64b2c1a7c746397",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)",
+        "body": "@Override\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }",
+        "ast_hash": "8cfcf54c23a44af43e90023da229f003",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.ResourceRepository.save(Resource resource)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Resource"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.getResource(String id, UUID requestId)",
+        "body": "@Override\n    public GetResourceResponse getResource(String id, UUID requestId) {\n        Resource resource = resourceRepository.findById(requestId.toString());\n\n        if (Objects.isNull(resource)) {\n            throw new RuntimeException(\"Resource not found\");\n        }\n\n        try {\n            if (!requestId.equals(resource.getOwnerId())) {\n                throw new RuntimeException(\"You are not allowed to access this resource\");\n            }\n\n            String url = storageService.getFileUrl(resource.getUrl());\n\n            return GetResourceResponse.builder()\n                    .name(resource.getName())\n                    .url(url)\n                    .build();\n\n        } catch (Exception e) {\n            log.info(\"Generate url failed {}\", e.getMessage());\n            throw new RuntimeException(\"Generate url failed\");\n        }\n    }",
+        "ast_hash": "d30372baa62bcf9c03dc634a925dcca8",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.repository.ResourceRepository.findById(String id)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getFileUrl(String fileName)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Resource",
+          "com.edu.onestudy.dto.resource.GetResourceResponse"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      },
+      {
+        "name": "com.edu.onestudy.service.impl.ResourceServiceImpl.downloadResourceFromUrl(String urlString)",
+        "body": "@Override\n    public File downloadResourceFromUrl(String urlString) {\n        try {\n            URI uri = URI.create(urlString);\n            URL url = uri.toURL();\n\n            String fileName = Path.of(uri.getPath()).getFileName().toString();\n            File outputFile = File.createTempFile(\"download_\", \"_\" + fileName);\n\n            try (InputStream in = url.openStream();\n                 FileOutputStream out = new FileOutputStream(outputFile)) {\n                byte[] buffer = new byte[8192];\n                int bytesRead;\n                while ((bytesRead = in.read(buffer)) != -1) {\n                    out.write(buffer, 0, bytesRead);\n                }\n            }\n\n            return outputFile;\n\n        } catch (IOException e) {\n            throw new RuntimeException(\"Failed to download file from URL: \" + urlString, e);\n        }\n    }",
+        "ast_hash": "ff540b8b74816f9b4254e2cd435df696",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "1",
+        "branch": "develop"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "1",
+    "branch": "develop",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.edu.onestudy.service.test",
+    "class_name": "ResourceServiceImpl",
+    "full_class_name": "com.edu.onestudy.service.test.ResourceServiceImpl",
+    "file_path": "f:\\01_projects\\axonion\\data\\onestudy\\src\\main\\java\\com\\edu\\onestudy\\service\\test\\ResourceServiceImpl.java",
+    "content": "@Service\n@Slf4j\npublic class ResourceServiceImpl {\n\n    private final ResourceRepository resourceRepository;\n\n    private final StorageService storageService;\n\n    public ResourceServiceImpl(StorageFactory storageFactory, ResourceRepository resourceRepository) {\n        this.resourceRepository = resourceRepository;\n        this.storageService = storageFactory.getStorageService(Constant.STORAGE_AWS);\n    }\n\n    public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n        List<Resource> lst = new ArrayList<>();\n        List<String> test2 = lst.stream().map(Resource::getId).map(UUID::toString).collect(Collectors.toList());\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }\n\n}",
+    "ast_hash": "691456d1d12a3516589cd055cab7648f",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.edu.onestudy.service.test.ResourceServiceImpl.uploadResource(MultipartFile file, UUID requestId)",
+        "body": "public Resource uploadResource(MultipartFile file, UUID requestId) {\n\n        String url = storageService.uploadFile(file);\n        List<Resource> lst = new ArrayList<>();\n        List<String> test2 = lst.stream().map(Resource::getId).map(UUID::toString).collect(Collectors.toList());\n\n        Resource resource = Resource.builder()\n                .name(file.getOriginalFilename())\n                .url(url)\n                .ownerId(requestId)\n                .extension(file.getContentType())\n                .sizeBytes(file.getSize())\n                .cloudId(storageService.getProviderName())\n                .build();\n        int test = resource.getLastModifiedAt().getDayOfMonth();\n        resourceRepository.save(resource);\n        return resource;\n    }",
+        "ast_hash": "c5e067de2ecdaed9fcff6933a659ff4b",
+        "method_calls": [
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.ResourceRepository.save(Resource resource)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.edu.onestudy.entity.Resource"
         ],
         "field_access": [],
         "inheritance_info": [],
