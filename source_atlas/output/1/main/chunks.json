@@ -395,8 +395,8 @@
         "ast_hash": "2ccdba487d79c431a17f8d6a726ead77",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.dto.Meta"
+          "com.edu.onestudy.dto.Meta",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
           "Meta meta"
@@ -413,13 +413,13 @@
         "ast_hash": "726cb57400ac4d19e7a3afe31612a3fa",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.dto.BaseResponse.T"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
-          "Meta meta",
+          "int SUCCESS = 200000",
           "T data",
-          "int SUCCESS = 200000"
+          "Meta meta"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -433,12 +433,12 @@
         "ast_hash": "395bdd9f5d00283785dd22a4e617f6ab",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.dto.BaseResponse.T"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
-          "Meta meta",
-          "int SUCCESS = 200000"
+          "int SUCCESS = 200000",
+          "Meta meta"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -457,8 +457,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -478,9 +478,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.BaseResponse.T",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -500,8 +500,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -521,9 +521,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.BaseResponse.T",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -538,9 +538,9 @@
         "ast_hash": "05d263c59f625fb61b6eb89167756a7a",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [
           "Meta meta"
@@ -557,10 +557,10 @@
         "ast_hash": "b0afc2ece42f9f9f42a61e7f970a4815",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta",
@@ -583,8 +583,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessException"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -604,9 +604,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
           "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.dto.BaseResponse.T"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -626,8 +626,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.dto.BaseResponse.T"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta"
@@ -649,9 +649,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.dto.BasicRequestList",
           "com.edu.onestudy.dto.BaseResponse.T",
-          "com.edu.onestudy.dto.BasicRequestList"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta",
@@ -674,9 +674,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
           "com.edu.onestudy.dto.BaseResponse.T",
-          "com.edu.onestudy.dto.BasicRequest"
+          "com.edu.onestudy.dto.BasicRequest",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta"
@@ -698,8 +698,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.dto.BaseResponse.T"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta"
@@ -721,8 +721,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [
           "Meta meta"
@@ -744,8 +744,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [
           "Meta meta"
@@ -767,9 +767,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.BaseResponse.T",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta",
@@ -792,9 +792,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.BaseResponse.T",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta",
@@ -817,9 +817,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [
           "Meta meta"
@@ -841,10 +841,10 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta",
@@ -867,8 +867,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessException"
         ],
         "field_access": [
           "Meta meta"
@@ -890,9 +890,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
           "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.dto.BaseResponse.T"
+          "com.edu.onestudy.dto.BaseResponse.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [
           "Meta meta",
@@ -1355,8 +1355,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.exception.BusinessException"
+          "com.edu.onestudy.exception.BusinessException",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
           "OK"
@@ -1377,7 +1377,7 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getBusinessError(int errorCode)",
+            "name": "com.edu.onestudy.service.BaseService.getMessage(String key)",
             "params": []
           },
           {
@@ -1385,7 +1385,7 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getMessage(String key)",
+            "name": "com.edu.onestudy.service.BaseService.getBusinessError(int errorCode)",
             "params": []
           },
           {
@@ -1394,14 +1394,14 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
-          "UPPER_CAMEL",
           "LOWER_UNDERSCORE",
           "OK",
+          "UPPER_CAMEL",
           "int INVALID_PARAMETERS = 4000001"
         ],
         "inheritance_info": [],
@@ -1425,8 +1425,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
           "OK",
@@ -1448,21 +1448,21 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.ofFailed(BusinessError error, String message, List<ErrorViolation> errors)",
+            "name": "com.edu.onestudy.service.BaseService.getMessage(BusinessError error)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getMessage(BusinessError error)",
+            "name": "com.edu.onestudy.service.BaseService.ofFailed(BusinessError error, String message, List<ErrorViolation> errors)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
-          "OK",
-          "int INTERNAL_SERVER_ERROR = 5001001"
+          "int INTERNAL_SERVER_ERROR = 5001001",
+          "OK"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -1485,8 +1485,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
           "OK",
@@ -1517,8 +1517,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
           "OK",
@@ -1549,21 +1549,21 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [
-          "OK",
-          "int NOT_FOUND = 4040001",
-          "FORBIDDEN",
-          "UNAUTHORIZED",
-          "int FORBIDDEN_ERROR = 4030001",
-          "int INVALID_PARAMETERS = 4000001",
-          "int INTERNAL_SERVER_ERROR = 5001001",
           "int UNAUTHORIZED = 4010001",
+          "int INTERNAL_SERVER_ERROR = 5001001",
+          "UNAUTHORIZED",
+          "int INVALID_PARAMETERS = 4000001",
           "BAD_REQUEST",
+          "FORBIDDEN",
+          "int FORBIDDEN_ERROR = 4030001",
+          "NOT_FOUND",
           "INTERNAL_SERVER_ERROR",
-          "NOT_FOUND"
+          "int NOT_FOUND = 4040001",
+          "OK"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -1750,8 +1750,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.thirdparty.pronunciation_svc.request.PronunciationAccuracyRequest",
-          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyRequestDto"
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyRequestDto",
+          "com.edu.onestudy.thirdparty.pronunciation_svc.request.PronunciationAccuracyRequest"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -1882,8 +1882,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -1898,8 +1898,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -2823,8 +2823,8 @@
         "method_calls": [],
         "used_types": [],
         "field_access": [
-          "String APPLICATION_JSON_VALUE = \"application/json\"",
-          "int SC_UNAUTHORIZED = 401"
+          "int SC_UNAUTHORIZED = 401",
+          "String APPLICATION_JSON_VALUE = \"application/json\""
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -2861,10 +2861,6 @@
           },
           {
             "name": "com.edu.onestudy.security.UserPrincipal.getAuthorities()",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.security.JwtProvider.extractUsername(String token)",
             "params": []
           }
         ],
@@ -3020,19 +3016,19 @@
         "ast_hash": "54a02e406c6a66bc4a5a1d7e0399b467",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.security.UserPrincipal.getUsername()",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.security.UserPrincipal.getAuthorities()",
-            "params": []
-          },
-          {
             "name": "com.edu.onestudy.security.JwtProvider.buildScope(UserPrincipal user)",
             "params": []
           },
           {
             "name": "com.edu.onestudy.security.JwtProvider.getSignInKey()",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.security.UserPrincipal.getUsername()",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.security.UserPrincipal.getAuthorities()",
             "params": []
           }
         ],
@@ -3164,8 +3160,8 @@
         "ast_hash": "561df99b7b3eadb57c7a8488d0630600",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.entity.User",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.entity.User"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3322,8 +3318,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.auth.AuthLoginResponse",
-          "com.edu.onestudy.dto.auth.AuthLoginRequest"
+          "com.edu.onestudy.dto.auth.AuthLoginRequest",
+          "com.edu.onestudy.dto.auth.AuthLoginResponse"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -3539,8 +3535,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.service.BaseService.T"
+          "com.edu.onestudy.service.BaseService.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3560,9 +3556,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.dto.BasicRequestList",
           "com.edu.onestudy.service.BaseService.T",
-          "com.edu.onestudy.dto.BasicRequestList"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3586,9 +3582,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
           "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.service.BaseService.T"
+          "com.edu.onestudy.service.BaseService.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3612,9 +3608,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
           "com.edu.onestudy.service.BaseService.T",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3638,10 +3634,10 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
+          "com.edu.onestudy.exception.BusinessError",
           "com.edu.onestudy.service.BaseService.T",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.exception.BusinessError"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3665,8 +3661,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessException"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3690,8 +3686,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3710,17 +3706,17 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getMessage(BusinessError error)",
+            "name": "com.edu.onestudy.service.BaseService.getRequestId()",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getRequestId()",
+            "name": "com.edu.onestudy.service.BaseService.getMessage(BusinessError error)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3744,9 +3740,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessError",
+          "com.edu.onestudy.dto.BaseResponse",
           "com.edu.onestudy.dto.ErrorViolation",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.exception.BusinessError"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3765,11 +3761,11 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getBusinessError(int errorCode)",
+            "name": "com.edu.onestudy.service.BaseService.getRequestId()",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getRequestId()",
+            "name": "com.edu.onestudy.service.BaseService.getBusinessError(int errorCode)",
             "params": []
           }
         ],
@@ -3802,8 +3798,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>",
-          "com.edu.onestudy.service.BaseService.T"
+          "com.edu.onestudy.service.BaseService.T",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<T>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -3902,8 +3898,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
-          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyRequestDto"
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyRequestDto",
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -3940,8 +3936,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.quiz.QuestionDto",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.QuestionDto"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -3958,8 +3954,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.quiz.QuestionDto",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.QuestionDto"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -4062,8 +4058,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -4080,8 +4076,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -4181,8 +4177,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest"
         ],
         "field_access": [],
         "inheritance_info": [
@@ -4761,10 +4757,6 @@
         "ast_hash": "fff67b1c67817aab1bab6512e9b66876",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.service.BaseService.getHeaders()",
-            "params": []
-          },
-          {
             "name": "com.edu.onestudy.service.BaseService.getRequestId()",
             "params": []
           },
@@ -4773,29 +4765,33 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.utils.Utils.redact(@NonNull String string)",
+            "name": "com.edu.onestudy.service.BaseService.getHeaders()",
             "params": []
           },
           {
             "name": "com.edu.onestudy.utils.JsonUtils.convertObjectToString(Object obj)",
             "params": []
+          },
+          {
+            "name": "com.edu.onestudy.utils.Utils.redact(@NonNull String string)",
+            "params": []
           }
         ],
         "used_types": [
-          "org.aspectj.lang.ProceedingJoinPoint",
-          "com.edu.onestudy.annotations.LogsActivityAnnotation"
+          "com.edu.onestudy.annotations.LogsActivityAnnotation",
+          "org.aspectj.lang.ProceedingJoinPoint"
         ],
         "field_access": [
-          "String code_file = \"code_file\"",
-          "String response = \"response\"",
-          "String execution_time = \"execution_time\"",
-          "String method_name = \"method_name\"",
           "String query_string = \"query_string\"",
-          "String request_id = \"request_id\"",
-          "String request = \"request\"",
-          "String message_type = \"message_type\"",
+          "String execution_time = \"execution_time\"",
           "String request_path = \"request_path\"",
-          "String headers = \"headers\""
+          "String request = \"request\"",
+          "String response = \"response\"",
+          "String request_id = \"request_id\"",
+          "String message_type = \"message_type\"",
+          "String method_name = \"method_name\"",
+          "String headers = \"headers\"",
+          "String code_file = \"code_file\""
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -4817,22 +4813,22 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.utils.JsonUtils.getGenericObject(Object input, Class<T> clazz)",
+            "name": "com.edu.onestudy.service.BaseService.getRequestBody()",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.BaseService.getRequestBody()",
+            "name": "com.edu.onestudy.utils.JsonUtils.getGenericObject(Object input, Class<T> clazz)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.exception.BusinessException",
-          "com.edu.onestudy.dto.BaseResponse"
+          "com.edu.onestudy.dto.BaseResponse",
+          "com.edu.onestudy.exception.BusinessException"
         ],
         "field_access": [
-          "String message_type = \"message_type\"",
+          "String request = \"request\"",
           "String response = \"response\"",
-          "String request = \"request\""
+          "String message_type = \"message_type\""
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -4919,9 +4915,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.auth.AuthProfileResponse",
           "com.edu.onestudy.security.UserPrincipal",
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<AuthProfileResponse>"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<AuthProfileResponse>",
+          "com.edu.onestudy.dto.auth.AuthProfileResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -4987,9 +4983,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
           "com.edu.onestudy.security.UserPrincipal",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5020,9 +5016,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
           "com.edu.onestudy.security.UserPrincipal",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5053,9 +5049,9 @@
           }
         ],
         "used_types": [
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<Quiz>",
           "com.edu.onestudy.security.UserPrincipal",
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<Quiz>"
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5086,9 +5082,9 @@
           }
         ],
         "used_types": [
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<Quiz>",
           "com.edu.onestudy.security.UserPrincipal",
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<Quiz>"
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5119,9 +5115,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<List<Quiz>>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5152,8 +5148,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5184,8 +5180,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5216,8 +5212,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5249,8 +5245,8 @@
         ],
         "used_types": [
           "com.edu.onestudy.security.UserPrincipal",
-          "com.edu.onestudy.entity.UserSavedQuiz",
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<List<UserSavedQuiz>>"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<List<UserSavedQuiz>>",
+          "com.edu.onestudy.entity.UserSavedQuiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5281,9 +5277,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<List<Quiz>>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5314,8 +5310,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5346,9 +5342,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<List<Quiz>>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5379,9 +5375,9 @@
           }
         ],
         "used_types": [
+          "com.edu.onestudy.security.UserPrincipal",
           "com.edu.onestudy.entity.QuizAttempt",
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<QuizAttempt>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<QuizAttempt>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5412,9 +5408,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
+          "com.edu.onestudy.security.UserPrincipal",
           "com.edu.onestudy.dto.quiz.SubmitAnswerRequest",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5445,8 +5441,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5495,8 +5491,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Resource",
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<Resource>",
+          "com.edu.onestudy.entity.Resource",
           "com.edu.onestudy.security.UserPrincipal"
         ],
         "field_access": [],
@@ -5529,8 +5525,8 @@
         ],
         "used_types": [
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<GetResourceResponse>",
-          "com.edu.onestudy.dto.resource.GetResourceResponse",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.resource.GetResourceResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5575,8 +5571,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<?>"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5626,8 +5622,8 @@
         ],
         "used_types": [
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<AuthLoginResponse>",
-          "com.edu.onestudy.dto.auth.AuthLoginResponse",
-          "com.edu.onestudy.dto.auth.AuthLoginRequest"
+          "com.edu.onestudy.dto.auth.AuthLoginRequest",
+          "com.edu.onestudy.dto.auth.AuthLoginResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -5658,8 +5654,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.BaseResponse.BaseResponse<AuthRegisterResponse>",
           "com.edu.onestudy.dto.auth.AuthRegisterRequest",
+          "com.edu.onestudy.dto.BaseResponse.BaseResponse<AuthRegisterResponse>",
           "com.edu.onestudy.dto.auth.AuthRegisterResponse"
         ],
         "field_access": [],
@@ -5791,9 +5787,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
           "com.edu.onestudy.dto.BaseResponse.BaseResponse<List<Quiz>>",
-          "com.edu.onestudy.security.UserPrincipal"
+          "com.edu.onestudy.security.UserPrincipal",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -6262,8 +6258,8 @@
         "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.constant.QuizStatus"
+          "com.edu.onestudy.constant.QuizStatus",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7132,17 +7128,17 @@
         "ast_hash": "395dda4c5c68e29df06c06aef087c62d",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.impl.JpaUserCredentialRepository.findByUserId(UUID userId)",
+            "name": "com.edu.onestudy.repository.impl.JpaUserRepository.findByUsername(String username)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.impl.JpaUserRepository.findByUsername(String username)",
+            "name": "com.edu.onestudy.repository.impl.JpaUserCredentialRepository.findByUserId(UUID userId)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.User",
-          "com.edu.onestudy.entity.UserCredential"
+          "com.edu.onestudy.entity.UserCredential",
+          "com.edu.onestudy.entity.User"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7157,8 +7153,8 @@
         "ast_hash": "10919e12bd8fb08329ec66ce382c44be",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.entity.User",
-          "com.edu.onestudy.entity.UserCredential"
+          "com.edu.onestudy.entity.UserCredential",
+          "com.edu.onestudy.entity.User"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7254,10 +7250,10 @@
           }
         ],
         "used_types": [
+          "com.edu.onestudy.entity.UserCredential",
           "com.edu.onestudy.entity.User",
           "com.edu.onestudy.dto.auth.AuthRegisterRequest",
-          "com.edu.onestudy.dto.auth.AuthRegisterResponse",
-          "com.edu.onestudy.entity.UserCredential"
+          "com.edu.onestudy.dto.auth.AuthRegisterResponse"
         ],
         "field_access": [
           "USER"
@@ -7308,8 +7304,8 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.auth.AuthLoginResponse",
-          "com.edu.onestudy.dto.auth.AuthLoginRequest"
+          "com.edu.onestudy.dto.auth.AuthLoginRequest",
+          "com.edu.onestudy.dto.auth.AuthLoginResponse"
         ],
         "field_access": [
           "int USERNAME_PASSWORD_WRONG = 4010002"
@@ -7344,8 +7340,8 @@
         "ast_hash": "c46cc812357d163c59d8ffe88c81b762",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.quiz.QuestionDto",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.QuestionDto"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7360,8 +7356,8 @@
         "ast_hash": "870f9a0e43d5a6a1ca021e11bb28675a",
         "method_calls": [],
         "used_types": [
-          "com.edu.onestudy.dto.quiz.QuestionDto",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse"
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.QuestionDto"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7461,9 +7457,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
           "com.edu.onestudy.dto.BaseCreateUpdateResponse",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7478,11 +7474,15 @@
         "ast_hash": "01f1ce74e10c74337728f51a31305391",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
+            "name": "com.edu.onestudy.mapper.QuestionMapper.updateQuestionFromDto(QuestionDto dto, @MappingTarget Question entity)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.mapper.QuestionMapper.updateQuestionFromDto(QuestionDto dto, @MappingTarget Question entity)",
+            "name": "com.edu.onestudy.repository.QuestionRepository.deleteAll(List<Question> questions)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.mapper.QuizMapper.updateQuizFromDto(CreateQuizDto dto, @MappingTarget Quiz entity)",
             "params": []
           },
           {
@@ -7490,11 +7490,7 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.mapper.QuizMapper.updateQuizFromDto(CreateQuizDto dto, @MappingTarget Quiz entity)",
+            "name": "com.edu.onestudy.repository.QuestionRepository.countByQuizId(String quizId)",
             "params": []
           },
           {
@@ -7506,23 +7502,23 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuestionRepository.deleteAll(List<Question> questions)",
+            "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuestionRepository.countByQuizId(String quizId)",
+            "name": "com.edu.onestudy.repository.QuizRepository.save(Quiz quiz)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.dto.quiz.CreateQuizDto",
           "com.edu.onestudy.dto.BaseCreateUpdateResponse",
           "com.edu.onestudy.entity.Question",
-          "com.edu.onestudy.dto.quiz.CreateQuizDto"
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [
-          "DRAFT",
-          "PUBLIC"
+          "PUBLIC",
+          "DRAFT"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -7590,15 +7586,11 @@
           {
             "name": "com.edu.onestudy.repository.QuizRepository.findById(String id)",
             "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuestionRepository.findByQuizId(String quizId)",
-            "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.entity.Question"
+          "com.edu.onestudy.entity.Question",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [
           "int QUIZ_NOT_FOUND = 4040002"
@@ -7669,11 +7661,11 @@
         "ast_hash": "8b245558d49fdfc3514858f5231f33b6",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.QuizAnswerRepository.delete(QuizAnswer oldAnswer)",
+            "name": "com.edu.onestudy.utils.JsonUtils.toJsonString(Object input)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizAnswerRepository.save(QuizAnswer answer)",
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
             "params": []
           },
           {
@@ -7681,19 +7673,11 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.ResourceService.downloadResourceFromUrl(String url)",
+            "name": "com.edu.onestudy.utils.FileUtils.convertToBase64(File file)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationServiceImpl.getAccuracy(PronunciationAccuracyRequestDto request)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.utils.JsonUtils.toJsonString(Object input)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuizAnswerRepository.findByQuizAttemptId(String attemptId)",
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
             "params": []
           },
           {
@@ -7705,33 +7689,41 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findById(String id)",
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.delete(QuizAnswer oldAnswer)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.utils.FileUtils.convertToBase64(File file)",
+            "name": "com.edu.onestudy.repository.QuizAnswerRepository.save(QuizAnswer answer)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationServiceImpl.getAccuracy(PronunciationAccuracyRequestDto request)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.service.ResourceService.downloadResourceFromUrl(String url)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
-          "com.edu.onestudy.entity.Question",
-          "com.edu.onestudy.entity.QuizAttempt",
-          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest",
-          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
           "com.edu.onestudy.entity.QuizAnswer",
-          "com.edu.onestudy.entity.QuestionOption"
+          "com.edu.onestudy.entity.QuizAttempt",
+          "com.edu.onestudy.dto.BaseCreateUpdateResponse",
+          "com.edu.onestudy.dto.quiz.SubmitAnswerRequest",
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.QuestionOption",
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
+          "com.edu.onestudy.entity.Question"
         ],
         "field_access": [
-          "PrintStream err",
-          "int QUESTION_DOES_NOT_BELONG_TO_QUIZ = 4040005",
+          "int QUIZ_NOT_FOUND = 4040002",
           "MULTIPLE_CHOICE",
-          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003",
-          "int QUESTION_NOT_FOUND = 4040006",
-          "int QUIZ_TIME_LIMIT_EXCEEDED = 4040008",
           "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
-          "int QUIZ_NOT_FOUND = 4040002"
+          "PrintStream err",
+          "int QUIZ_TIME_LIMIT_EXCEEDED = 4040008",
+          "int QUESTION_NOT_FOUND = 4040006",
+          "int QUIZ_ATTEMPT_NOT_FOUND = 4040003",
+          "int QUESTION_DOES_NOT_BELONG_TO_QUIZ = 4040005"
         ],
         "inheritance_info": [],
         "endpoint": [],
@@ -7749,13 +7741,13 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
+            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
-          "com.edu.onestudy.entity.QuizAttempt"
+          "com.edu.onestudy.entity.QuizAttempt",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -7787,9 +7779,9 @@
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.QuizAnswer",
           "com.edu.onestudy.entity.QuizAttempt",
-          "com.edu.onestudy.entity.QuizAnswer"
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [
           "int QUIZ_ATTEMPT_NOT_FOUND = 4040003"
@@ -7818,8 +7810,8 @@
           "com.edu.onestudy.entity.QuizAttempt"
         ],
         "field_access": [
-          "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
           "int QUIZ_ATTEMPT_NOT_BELONG_TO_USER = 4040007",
+          "int QUIZ_ATTEMPT_SUBMITTED = 4040004",
           "int QUIZ_ATTEMPT_NOT_FOUND = 4040003"
         ],
         "inheritance_info": [],
@@ -7834,15 +7826,7 @@
         "ast_hash": "5a509f0d3d059c74623daba02f2b727d",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.UserRepository.getUserById(String userId)",
-            "params": []
-          },
-          {
             "name": "com.edu.onestudy.service.impl.QuizServiceImpl.getQuizAuthor(List<Quiz> quizzes)",
-            "params": []
-          },
-          {
-            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByQuizId(String id)",
             "params": []
           },
           {
@@ -7854,15 +7838,19 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByQuizId(String quizId)",
+            "name": "com.edu.onestudy.repository.UserRepository.getUserById(String userId)",
+            "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizAttemptRepository.findByQuizId(String id)",
             "params": []
           }
         ],
         "used_types": [
           "com.edu.onestudy.entity.User",
-          "com.edu.onestudy.entity.Quiz",
           "com.edu.onestudy.entity.QuizAttempt",
-          "com.edu.onestudy.entity.Question"
+          "com.edu.onestudy.entity.Question",
+          "com.edu.onestudy.entity.Quiz"
         ],
         "field_access": [
           "int QUIZ_NOT_FOUND = 4040002"
@@ -7903,11 +7891,15 @@
           {
             "name": "com.edu.onestudy.repository.SavedQuizRepository.findAllByUserId(String userId)",
             "params": []
+          },
+          {
+            "name": "com.edu.onestudy.repository.QuizRepository.findByIdIn(Set<String> quizId)",
+            "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.entity.UserSavedQuiz",
-          "com.edu.onestudy.entity.Quiz"
+          "com.edu.onestudy.entity.Quiz",
+          "com.edu.onestudy.entity.UserSavedQuiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -8010,11 +8002,11 @@
         "ast_hash": "8c8628ac53516026adb503704c45b76d",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getProviderName()",
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.uploadFile(MultipartFile file)",
             "params": []
           },
           {
@@ -8038,17 +8030,17 @@
         "ast_hash": "d30372baa62bcf9c03dc634a925dcca8",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.repository.ResourceRepository.findById(String id)",
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getFileUrl(String fileName)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.getFileUrl(String fileName)",
+            "name": "com.edu.onestudy.repository.ResourceRepository.findById(String id)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.dto.resource.GetResourceResponse",
-          "com.edu.onestudy.entity.Resource"
+          "com.edu.onestudy.entity.Resource",
+          "com.edu.onestudy.dto.resource.GetResourceResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -8195,18 +8187,18 @@
             "params": []
           },
           {
-            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationFeignClient.getAccuracyFromRecordedAudio(@RequestBody PronunciationAccuracyRequest request)",
+            "name": "com.edu.onestudy.mapper.PronunciationMapper.toPronunciationAccuracyResponseDto(PronunciationAccuracyResponse response)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.mapper.PronunciationMapper.toPronunciationAccuracyResponseDto(PronunciationAccuracyResponse response)",
+            "name": "com.edu.onestudy.thirdparty.pronunciation_svc.PronunciationFeignClient.getAccuracyFromRecordedAudio(@RequestBody PronunciationAccuracyRequest request)",
             "params": []
           }
         ],
         "used_types": [
-          "com.edu.onestudy.thirdparty.pronunciation_svc.request.PronunciationAccuracyRequest",
-          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
           "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyRequestDto",
+          "com.edu.onestudy.dto.pronunciation.PronunciationAccuracyResponseDto",
+          "com.edu.onestudy.thirdparty.pronunciation_svc.request.PronunciationAccuracyRequest",
           "com.edu.onestudy.thirdparty.pronunciation_svc.response.PronunciationAccuracyResponse"
         ],
         "field_access": [
@@ -8255,11 +8247,11 @@
         "ast_hash": "c969a7c4c4bec1552eda16104ee385c4",
         "method_calls": [
           {
-            "name": "com.edu.onestudy.thirdparty.storage.AwsStorageServiceImpl.getFileUrl(String fileName)",
+            "name": "com.edu.onestudy.thirdparty.storage.StorageService.convertMultiPartFileToFile(MultipartFile file)",
             "params": []
           },
           {
-            "name": "com.edu.onestudy.thirdparty.storage.StorageService.convertMultiPartFileToFile(MultipartFile file)",
+            "name": "com.edu.onestudy.thirdparty.storage.AwsStorageServiceImpl.getFileUrl(String fileName)",
             "params": []
           }
         ],
@@ -8294,8 +8286,8 @@
         "ast_hash": "bab25f338944d612e13a82dd82eeab67",
         "method_calls": [],
         "used_types": [
-          "software.amazon.awssdk.services.s3.model.GetObjectRequest",
-          "software.amazon.awssdk.services.s3.model.GetObjectResponse"
+          "software.amazon.awssdk.services.s3.model.GetObjectResponse",
+          "software.amazon.awssdk.services.s3.model.GetObjectRequest"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -8356,9 +8348,9 @@
         "ast_hash": "ee787f32e9b3a48596d6e39fcb9cb2a2",
         "method_calls": [],
         "used_types": [
-          "com.google.cloud.storage.BlobId",
+          "com.google.cloud.storage.BlobInfo",
           "com.google.cloud.storage.Storage",
-          "com.google.cloud.storage.BlobInfo"
+          "com.google.cloud.storage.BlobId"
         ],
         "field_access": [],
         "inheritance_info": [],

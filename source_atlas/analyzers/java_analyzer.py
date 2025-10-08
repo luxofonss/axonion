@@ -375,6 +375,36 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         method_signature = f"{method_name}{method_params or '()'}"
         return method_signature, method_name_node
 
+    def _extract_all_method_names_from_class(self, class_node: Node, content: str, full_class_name: str) -> List[str]:
+        """
+        Extract all method names from a class and add them to the methods cache.
+        
+        Args:
+            class_node: The class AST node
+            content: The file content
+            full_class_name: The fully qualified class name
+            
+        Returns:
+            List of method names found in the class
+        """
+        method_names = []
+        class_body = self._get_class_body(class_node)
+        if not class_body:
+            return method_names
+
+        try:
+            for child in class_body.children:
+                if child.type == 'method_declaration' or child.type == 'constructor_declaration':
+                    method_name, _ = self._extract_method_name(child, content)
+                    if method_name:
+                        # Extract just the method name (without parameters)
+                        method_name_only = method_name.split('(')[0]
+                        method_names.append(method_name_only)
+        except Exception as e:
+            logger.debug(f"Error extracting method names from class: {e}")
+            
+        return method_names
+
     def _is_nested_class(self, class_node: Node, root_node: Node) -> bool:
         parent = class_node.parent
         while parent and parent != root_node:
@@ -730,9 +760,12 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
 
                 if object_name and object_name in JavaBuiltinPackages.JAVA_PRIMITIVES:
                     continue
-
-                try:
-                    name_node = method_nodes[i] if i < len(method_nodes) else None
+                name_node = method_nodes[i] if i < len(method_nodes) else None
+                method_name = extract_content(name_node, content)
+                if method_name and method_name not in self.methods_cache:
+                    logger.info(f"Method {method_name} not in methods cache")
+                    continue
+                try:                    
                     args_node = args_nodes[i] if i < len(args_nodes) else None
 
                     resolved = self._resolve_method_call(name_node, args_node, file_path, content)

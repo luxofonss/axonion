@@ -20,6 +20,7 @@ class ClassParsingContext:
     full_class_name: str
     is_nested: bool
     is_config: bool
+    methods: List[str]
     import_mapping: Dict[str, str] = None
     parent_class: Optional[str] = None
 
@@ -33,7 +34,7 @@ class BaseCodeAnalyzer(ABC):
         self.project_id = project_id
         self.branch = branch
         self.cached_nodes = {}
-        self.methods_cache = {}
+        self.methods_cache = set()  # Use set for efficient lookup
         self.lsp_service: LSPService = None
 
     def parse_project(self, root: Path, target_files: Optional[List[str]] = None, parse_all: bool = True, export_output: bool = True) -> List[CodeChunk]:
@@ -164,6 +165,11 @@ class BaseCodeAnalyzer(ABC):
         parent_class = self._get_parent_class(class_node, content, package) if is_nested else None,
         is_config = self._is_config_node(class_node, content)
         import_mapping = self.build_import_mapping(root_node, content)
+        
+        # Extract and cache method names for this class
+        methods = self._extract_all_method_names_from_class(class_node, content, full_class_name)
+        self.methods_cache.update(methods)  # set.update() works with iterables
+        
         return ClassParsingContext(
             package=package,
             class_name=class_name,
@@ -171,7 +177,8 @@ class BaseCodeAnalyzer(ABC):
             is_nested=is_nested,
             parent_class=parent_class,
             is_config = is_config,
-            import_mapping=import_mapping
+            import_mapping=import_mapping,
+            methods=methods
         )
 
     def _read_file_content(self, file_path: Path) -> str:
@@ -253,6 +260,22 @@ class BaseCodeAnalyzer(ABC):
         """
         Compute AST hash for the specific language.
         Should be implemented by each language-specific analyzer.
+        """
+        pass
+
+    @abstractmethod
+    def _extract_all_method_names_from_class(self, class_node: Node, content: str, full_class_name: str) -> List[str]:
+        """
+        Extract all method names from a class and add them to the methods cache.
+        Should be implemented by each language-specific analyzer.
+        
+        Args:
+            class_node: The class AST node
+            content: The file content
+            full_class_name: The fully qualified class name
+            
+        Returns:
+            List of method names found in the class
         """
         pass
 
