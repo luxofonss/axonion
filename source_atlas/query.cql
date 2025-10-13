@@ -323,7 +323,7 @@ WITH [
 
 
 WITH [
-  {class_name: 'com.edu.onestudy.controller.external.QuizController', method_name: 'com.edu.onestudy.controller.external.QuizController.submitQuizQuestion(@PathVariable String attempt_id, @RequestBody SubmitAnswerRequest request, @CurrentUser UserPrincipal currentUser)'}
+  {class_name: 'com.edu.onestudy.service.impl.QuizServiceImpl', method_name: ''}
 ] AS targets
 
         

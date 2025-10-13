@@ -4,6 +4,7 @@ from loguru import logger
 
 from core.neo4j_db import Neo4jDB
 from source_atlas.models.domain_models import CodeChunk, ChunkType
+from schema.target_node_schema import TargetNode
 
 
 def _escape_for_cypher(text):
@@ -15,6 +16,65 @@ def _escape_for_cypher(text):
     text = text.replace('\t', '\\t')
     text = text.replace('\r', '\\r')
     return text
+
+
+def _path_to_json(path):
+    """
+    Convert Neo4j Path object to structured JSON format.
+    
+    Args:
+        path: Neo4j Path object
+        
+    Returns:
+        dict: Structured path representation
+    """
+    if not path:
+        return None
+    
+    nodes = list(path.nodes)
+    relationships = list(path.relationships)
+    
+    # Build path structure
+    path_data = {
+        "start_node": dict(nodes[0]) if nodes else None,
+        "end_node": dict(nodes[-1]) if nodes else None,
+        "total_length": len(relationships),
+        "nodes": [dict(node) for node in nodes],
+        "relationships": [],
+        "path_summary": []
+    }
+    
+    # Build relationships with direction and type
+    for i, rel in enumerate(relationships):
+        start_node = nodes[i] if i < len(nodes) else None
+        end_node = nodes[i + 1] if i + 1 < len(nodes) else None
+        
+        rel_data = {
+            "relationship_type": rel.type,
+            "start_node": dict(start_node) if start_node else None,
+            "end_node": dict(end_node) if end_node else None,
+            "properties": dict(rel) if rel else {}
+        }
+        path_data["relationships"].append(rel_data)
+        
+        # Build path summary for easier reading
+        summary_item = {
+            "step": i + 1,
+            "from": {
+                "class_name": start_node.get("class_name") if start_node else None,
+                "method_name": start_node.get("method_name") if start_node else None,
+                "node_type": list(start_node.labels)[0] if start_node and hasattr(start_node, 'labels') else None
+            } if start_node else None,
+            "relationship": rel.type,
+            "to": {
+                "class_name": end_node.get("class_name") if end_node else None,
+                "method_name": end_node.get("method_name") if end_node else None,
+                "node_type": list(end_node.labels)[0] if end_node and hasattr(end_node, 'labels') else None
+            } if end_node else None
+        }
+        path_data["path_summary"].append(summary_item)
+    
+    return path_data
 
 
 class Neo4jService:
@@ -579,7 +639,7 @@ class Neo4jService:
 
     def get_related_nodes(
         self,
-        target_nodes: List[Dict[str, str]],
+        target_nodes: List[TargetNode],
         max_level: int = 20,
         relationship_filter: str = "CALL>|<IMPLEMENT|<EXTEND|USE>",
         min_level: int = 1 # at least one relation with other nodes
@@ -588,11 +648,7 @@ class Neo4jService:
         Get all nodes related to a list of target nodes by traversing relationships.
         
         Args:
-            target_nodes: List of target nodes, each dict should have:
-                - class_name: str
-                - method_name: str | None
-                - branch: str
-                - project_id: str
+            target_nodes: List of TargetNode DTO objects
             max_level: Maximum traversal depth (default: 20)
             relationship_filter: Relationship filter for APOC (default: "CALL>|<IMPLEMENT|<EXTEND|USE>")
             min_level: Minimum traversal depth (default: 1)
@@ -653,7 +709,7 @@ class Neo4jService:
         """
         
         params = {
-            'targets': target_nodes,
+            'targets': [node.to_dict() for node in target_nodes],
             'relationship_filter': relationship_filter,
             'min_level': min_level,
             'max_level': max_level
@@ -664,7 +720,7 @@ class Neo4jService:
             return [
                 {
                     'endpoint': dict(record['endpoint']),
-                    'path': record['path'],
+                    'path': _path_to_json(record['path']),  # Convert Neo4j Path to structured JSON
                     'visited_nodes': [dict(node) for node in record['visited_nodes']]
                 }
                 for record in result
@@ -672,7 +728,7 @@ class Neo4jService:
 
     def get_left_target_nodes(
         self,
-        target_nodes: List[Dict[str, str]],
+        target_nodes: List[TargetNode],
         max_level: int = 20,
         min_level: int = 1 # at least one relation with other nodes
     ) -> List[Dict]:
@@ -682,14 +738,9 @@ class Neo4jService:
         This traverses relationships in reverse to find nodes that call, implement, extend, or use the target nodes.
         
         Args:
-            target_nodes: List of target nodes, each dict should have:
-                - class_name: str
-                - method_name: str | None
-                - branch: str
-                - project_id: str
+            target_nodes: List of TargetNode DTO objects
             max_level: Maximum traversal depth (default: 20)
-            relationship_filter: Relationship filter for APOC (default: "<CALL|IMPLEMENT>|EXTEND>|<USE")
-            min_level: Minimum traversal depth (default: 0)
+            min_level: Minimum traversal depth (default: 1)
             
         Returns:
             List of dicts containing:
@@ -746,7 +797,7 @@ class Neo4jService:
         """
         
         params = {
-            'targets': target_nodes,
+            'targets': [node.to_dict() for node in target_nodes],
             'min_level': min_level,
             'max_level': max_level
         }
@@ -756,7 +807,7 @@ class Neo4jService:
             return [
                 {
                     'endpoint': dict(record['endpoint']),
-                    'path': record['path'],
+                    'path': _path_to_json(record['path']),  # Convert Neo4j Path to structured JSON
                     'visited_nodes': [dict(node) for node in record['visited_nodes']]
                 }
                 for record in result
