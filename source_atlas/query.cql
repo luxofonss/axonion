@@ -323,7 +323,7 @@ WITH [
 
 
 WITH [
-  {class_name: 'com.edu.onestudy.service.impl.QuizServiceImpl', method_name: ''}
+  {class_name: 'com.edu.onestudy.controller.external.QuizController', method_name: 'com.edu.onestudy.controller.external.QuizController.updateQuiz(@RequestBody CreateQuizDto request, @CurrentUser UserPrincipal currentUser)'}
 ] AS targets
 
         
@@ -348,6 +348,17 @@ WITH [
         WITH endpoint, path,
              nodes(path) AS node_list,
              relationships(path) AS rel_list
+
+        WITH endpoint, path, node_list, rel_list, 
+            [i IN range(0, size(rel_list) - 1)] |
+              CASE 
+                WHEN type(rel_list[i]) = 'BRANCH'
+                    AND node_list[i + 1].branch = 'develop'
+                    AND node_list[i].branch = 'main'
+                    then node_list[i+1]
+                ELSE null
+                END
+            ] as exclude_nodes  
         
         WITH endpoint, path, node_list, rel_list,
              [i IN range(0, size(rel_list)-1) |

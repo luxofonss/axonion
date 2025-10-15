@@ -641,8 +641,8 @@ class Neo4jService:
         self,
         target_nodes: List[TargetNode],
         max_level: int = 20,
-        relationship_filter: str = "CALL>|<IMPLEMENT|<EXTEND|USE>",
-        min_level: int = 1 # at least one relation with other nodes
+        min_level: int = 1,
+        relationship_filter: str = "CALL>|<IMPLEMENT|<EXTEND|USE>|<BRANCH"
     ) -> List[Dict]:
         """
         Get all nodes related to a list of target nodes by traversing relationships.
@@ -650,7 +650,7 @@ class Neo4jService:
         Args:
             target_nodes: List of TargetNode DTO objects
             max_level: Maximum traversal depth (default: 20)
-            relationship_filter: Relationship filter for APOC (default: "CALL>|<IMPLEMENT|<EXTEND|USE>")
+            relationship_filter: Relationship filter for APOC (default: "CALL>|<IMPLEMENT|<EXTEND|USE>|<BRANCH")
             min_level: Minimum traversal depth (default: 1)
             
         Returns:
@@ -674,7 +674,7 @@ class Neo4jService:
         )
         
         CALL apoc.path.expandConfig(endpoint, {
-          relationshipFilter: $relationship_filter,
+          relationshipFilter: "CALL>|<IMPLEMENT|<EXTEND|USE>|<BRANCH",
           minLevel: $min_level,
           maxLevel: $max_level,
           bfs: true,
@@ -685,15 +685,26 @@ class Neo4jService:
         WITH endpoint, path,
              nodes(path) AS node_list,
              relationships(path) AS rel_list
+
+        WITH endpoint, path, node_list, rel_list, 
+            [i IN range(0, size(rel_list) - 1) |
+            CASE 
+                WHEN type(rel_list[i]) = 'BRANCH'
+                    AND node_list[i + 1].branch = 'develop'
+                    AND node_list[i].branch = 'main'
+                THEN node_list[i+1]
+                ELSE null
+            END
+            ] AS exclude_nodes
         
-        WITH endpoint, path, node_list, rel_list,
+        WITH endpoint, path, node_list, rel_list, exclude_nodes,
              [i IN range(0, size(rel_list)-1) |
                 CASE
                   WHEN type(rel_list[i]) = 'CALL'
                        AND node_list[i+1].method_name IS NOT NULL
                   THEN node_list[i+1]
                   
-                  WHEN type(rel_list[i]) IN ['IMPLEMENT', 'EXTEND']
+                  WHEN type(rel_list[i]) IN ['IMPLEMENT', 'EXTEND', 'BRANCH']
                   THEN node_list[i+1]
                   
                   WHEN type(rel_list[i]) = 'USE'
@@ -704,7 +715,7 @@ class Neo4jService:
              ] AS filtered_nodes
         
         RETURN endpoint, path,
-               [node IN filtered_nodes WHERE node IS NOT NULL] AS visited_nodes
+               [node IN filtered_nodes WHERE node IS NOT NULL AND NOT node IN exclude_nodes] AS visited_nodes
         ORDER BY path
         """
         
