@@ -35,3 +35,4 @@ class IndexProjectRequest(BaseModel):
     language: str | None = None
     target_files: list[str] | None = None  # Optional list of files to parse (can be partial paths)
     parse_all: bool = True  # If True, parse all files; if False, only parse target_files
+    force_reindex: bool = False  # If True, force reindex even if commit already exists

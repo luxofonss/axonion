@@ -237,3 +237,117 @@ class GitService:
         except Exception as e:
             logger.error(f"Failed to get diff files: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Failed to get diff files: {str(e)}")
+    
+    def get_diff_content(self, repo_path: str, base_branch: str, target_branch: str) -> str:
+        """Get the full diff content between two branches."""
+        try:
+            from git import Repo
+            
+            repo = Repo(str(repo_path))
+            
+            # Get the full diff between the two branches
+            diff_output = repo.git.diff(f'{base_branch}...{target_branch}')
+            
+            if not diff_output.strip():
+                logger.info(f"No differences found between {base_branch} and {target_branch}")
+                return ""
+            
+            logger.info(f"Generated diff content between {base_branch} and {target_branch}")
+            return diff_output
+        except Exception as e:
+            logger.error(f"Failed to get diff content: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to get diff content: {str(e)}")
+    
+    async def post_github_comment(
+        self, 
+        repo: str, 
+        pr_number: int, 
+        comment_body: str, 
+        github_token: str,
+        timeout: int = 30
+    ) -> Optional[Dict[str, Any]]:
+        """Post a comment to a GitHub pull request."""
+        comment_url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
+        
+        headers = {
+            "Authorization": f"Bearer {github_token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+        
+        payload = {"body": comment_body}
+        
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                response = await client.post(
+                    comment_url,
+                    headers=headers,
+                    json=payload
+                )
+                response.raise_for_status()
+                
+                logger.info(f"Successfully posted comment to PR #{pr_number} in {repo}")
+                return response.json()
+                
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to post GitHub comment: {e.response.status_code} - {e.response.text}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to post GitHub comment: {e.response.status_code}"
+            )
+        except httpx.TimeoutException:
+            logger.error("Timeout posting GitHub comment")
+            raise HTTPException(status_code=504, detail="GitHub API timeout")
+        except httpx.RequestError as e:
+            logger.error(f"Request error posting GitHub comment: {str(e)}")
+            raise HTTPException(status_code=502, detail="Failed to connect to GitHub API")
+        except Exception as e:
+            logger.error(f"Unexpected error posting GitHub comment: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to post comment: {str(e)}")
+    
+    def generate_code_review_comment(self, review_result: Dict[str, Any]) -> str:
+        """Generate GitHub comment from code review result."""
+        overall_score = review_result.get("overall_score", 0)
+        jira_tickets = review_result.get("jira_tickets_found", 0)
+        files_changed = review_result.get("files_changed", 0)
+        style_issues = review_result.get("style_issues_count", 0)
+        compliance_score = review_result.get("requirement_compliance_score", 0)
+        recommendations = review_result.get("recommendations", [])
+        
+        # Score emoji
+        if overall_score >= 8:
+            score_emoji = "🟢"
+        elif overall_score >= 6:
+            score_emoji = "🟡"
+        else:
+            score_emoji = "🔴"
+        
+        comment = f"""## 🤖 Automated Code Review {score_emoji}
+
+**Overall Score: {overall_score}/10**
+
+### 📊 Summary
+- **Files Changed:** {files_changed}
+- **Jira Tickets Found:** {jira_tickets}
+- **Style Issues:** {style_issues}
+- **Requirement Compliance:** {compliance_score:.1%}
+
+### 📝 Recommendations
+"""
+        
+        if recommendations:
+            for i, rec in enumerate(recommendations, 1):
+                comment += f"{i}. {rec}\n"
+        else:
+            comment += "✅ No specific recommendations - good job!\n"
+        
+        if review_result.get("error"):
+            comment += f"\n⚠️ **Error during review:** {review_result['error']}\n"
+        
+        comment += "\n---\n*This review was generated automatically by Axonion Code Review Bot*"
+        
+        return comment
+    
+    def generate_simple_comment(self, message: str, emoji: str = "👋") -> str:
+        """Generate a simple GitHub comment."""
+        return f"{emoji} {message}"

@@ -6,6 +6,7 @@ from core.middleware import inject
 from models.project import Project
 from schema.project_schema import UpsertProject, IndexProjectRequest
 from schema.target_node_schema import NodeRelationshipRequest, NodeRelationshipListResponse
+from schema.node_query_schema import NodeQueryRequest, NodeQueryResponse
 from services.project_service import ProjectService
 from services.neo4j_service import Neo4jService
 
@@ -85,4 +86,34 @@ def get_related_nodes(
     return NodeRelationshipListResponse(
         results=results,
         total_count=len(results)
+    )
+
+
+@router.post("/{project_id}/nodes/query", response_model=NodeQueryResponse)
+@inject
+def get_nodes_by_condition(
+    project_id: int,
+    request: NodeQueryRequest,
+    neo4j_service: Neo4jService = Depends(Provide[Container.neo4j_service])
+):
+    """
+    Get nodes by various conditions including project_id, branch, pull_request_id, etc.
+    
+    This allows flexible querying of nodes with multiple optional filters.
+    """
+    # Validate that request project_id matches URL project_id
+    if request.project_id != project_id:
+        raise ValueError(f"Request project_id {request.project_id} does not match URL project_id {project_id}")
+    
+    nodes = neo4j_service.get_nodes_by_condition(
+        project_id=request.project_id,
+        branch=request.branch,
+        pull_request_id=request.pull_request_id,
+        class_name=request.class_name,
+        method_name=request.method_name
+    )
+    
+    return NodeQueryResponse(
+        nodes=nodes,
+        total_count=len(nodes)
     )

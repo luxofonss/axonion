@@ -22,6 +22,9 @@ class AppCreator:
         self.db = self.container.db()
         # create tables at startup (simple bootstrap; switch to Alembic for prod)
         self.db.create_database()
+        
+        # Setup circular dependencies
+        Container.setup_circular_dependencies()
 
         # set cors
         if configs.BACKEND_CORS_ORIGINS:

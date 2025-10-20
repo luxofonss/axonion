@@ -61,6 +61,11 @@ class Configs(BaseSettings):
     NEO4J_MAX_CONNECTION_POOL_SIZE: int = int(os.getenv("NEO4J_MAX_CONNECTION_POOL_SIZE", "50"))
     NEO4J_CONNECTION_TIMEOUT: float = float(os.getenv("NEO4J_CONNECTION_TIMEOUT", "30.0"))
 
+    # Jira Configuration
+    JIRA_URL: str = os.getenv("JIRA_URL", "")
+    JIRA_USERNAME: str = os.getenv("JIRA_USERNAME", "")
+    JIRA_API_TOKEN: str = os.getenv("JIRA_API_TOKEN", "")
+
     class Config:
         case_sensitive = True
 

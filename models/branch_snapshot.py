@@ -1,4 +1,5 @@
-from sqlmodel import Field, UniqueConstraint
+from sqlmodel import Field, UniqueConstraint, JSON, Column
+from typing import Optional, List, Dict, Any
 
 from models.base_model import BaseModel
 
@@ -17,4 +18,8 @@ class BranchSnapshot(BaseModel, table=True):
     chunk_count: int = Field(default=0)
     file_count: int = Field(default=0)
     status: str = Field(default="completed")  # "parsing", "completed", "failed"
+    
+    # Optional fields for pull requests
+    pull_request_id: Optional[str] = Field(default=None, index=True)
+    changed_nodes: Optional[List[Dict[str, Any]]] = Field(default=None, sa_column=Column(JSON))
 

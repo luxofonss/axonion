@@ -1,0 +1,697 @@
+[
+  {
+    "package": "com.example.demo.controller",
+    "class_name": "QuestionController",
+    "full_class_name": "com.example.demo.controller.QuestionController",
+    "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\controller\\QuestionController.java",
+    "content": "@RestController\n@RequestMapping(\"/api/questions\")\n@CrossOrigin(origins = \"*\")\npublic class QuestionController {\n    \n    @Autowired\n    private QuestionService questionService;\n    \n    @PostMapping\n    public ResponseEntity<?> createQuestion(\n            @Valid @RequestBody CreateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult) {\n        \n        try {\n            \n            if (bindingResult.hasErrors()) {\n                String errorMessage = bindingResult.getFieldErrors().stream()\n                    .map(error -> error.getField() + \": \" + error.getDefaultMessage())\n                    .collect(Collectors.joining(\", \"));\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(errorMessage, HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            QuestionResponse response = questionService.createQuestion(request, userId);\n            return ResponseEntity.status(HttpStatus.CREATED).body(response);\n            \n        } catch (IllegalArgumentException e) {\n            return ResponseEntity.badRequest()\n                .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value()));\n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n    \n    @GetMapping\n    public ResponseEntity<?> getUserQuestions(\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            List<QuestionResponse> questions = questionService.getUserQuestions(userId);\n            return ResponseEntity.ok(questions);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n    \n    @GetMapping(\"/{questionId}\")\n    public ResponseEntity<?> getQuestionById(\n            @PathVariable Long questionId,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            QuestionResponse question = questionService.getQuestionById(questionId, userId);\n            return ResponseEntity.ok(question);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n    \n    @PutMapping(\"/{questionId}\")\n    public ResponseEntity<?> updateQuestion(\n            @PathVariable Long questionId,\n            @Valid @RequestBody UpdateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult) {\n        \n        try {\n            \n            if (bindingResult.hasErrors()) {\n                String errorMessage = bindingResult.getFieldErrors().stream()\n                    .map(error -> error.getField() + \": \" + error.getDefaultMessage())\n                    .collect(Collectors.joining(\", \"));\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(errorMessage, HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            \n            if (isUpdateRequestEmpty(request)) {\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(\"At least one field must be provided for update\", HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            QuestionResponse response = questionService.updateQuestion(questionId, request, userId);\n            return ResponseEntity.ok(response);\n            \n        } catch (IllegalArgumentException e) {\n            return ResponseEntity.badRequest()\n                .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value()));\n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\")) {\n                return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value()));\n            }\n            if (e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n    \n    private boolean isUpdateRequestEmpty(UpdateQuestionRequest request) {\n        return request.getQuestionText() == null &&\n               request.getQuestionType() == null &&\n               request.getOptions() == null &&\n               request.getCorrectAnswer() == null &&\n               request.getExplanation() == null &&\n               request.getTags() == null &&\n               request.getDifficulty() == null &&\n               request.getQuizId() == null;\n    }\n}",
+    "ast_hash": "a0c7c5149b1a3294d56203ae54189ed7",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.example.demo.controller.QuestionController.createQuestion(\n            @Valid @RequestBody CreateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult)",
+        "body": "@PostMapping\n    public ResponseEntity<?> createQuestion(\n            @Valid @RequestBody CreateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult) {\n        \n        try {\n            \n            if (bindingResult.hasErrors()) {\n                String errorMessage = bindingResult.getFieldErrors().stream()\n                    .map(error -> error.getField() + \": \" + error.getDefaultMessage())\n                    .collect(Collectors.joining(\", \"));\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(errorMessage, HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            QuestionResponse response = questionService.createQuestion(request, userId);\n            return ResponseEntity.status(HttpStatus.CREATED).body(response);\n            \n        } catch (IllegalArgumentException e) {\n            return ResponseEntity.badRequest()\n                .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value()));\n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
+        "ast_hash": "fc336e5f4a66d6f239c5ff21577f894d",
+        "method_calls": [
+          {
+            "name": "com.example.demo.service.QuestionService.createQuestion(CreateQuestionRequest request, Long userId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.dto.CreateQuestionRequest",
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [
+          "UNAUTHORIZED",
+          "INTERNAL_SERVER_ERROR",
+          "BAD_REQUEST",
+          "CREATED"
+        ],
+        "inheritance_info": [],
+        "endpoint": [
+          {
+            "type": "POST",
+            "path": "/api/questions",
+            "produces": "",
+            "consumes": ""
+          }
+        ],
+        "type": "rest_endpoint",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.controller.QuestionController.getUserQuestions(\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId)",
+        "body": "@GetMapping\n    public ResponseEntity<?> getUserQuestions(\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            List<QuestionResponse> questions = questionService.getUserQuestions(userId);\n            return ResponseEntity.ok(questions);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
+        "ast_hash": "093ead8152de9e820bb86213025a1ac9",
+        "method_calls": [
+          {
+            "name": "com.example.demo.service.QuestionService.getUserQuestions(Long userId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [
+          "UNAUTHORIZED",
+          "INTERNAL_SERVER_ERROR"
+        ],
+        "inheritance_info": [],
+        "endpoint": [
+          {
+            "type": "GET",
+            "path": "/api/questions",
+            "produces": "",
+            "consumes": ""
+          }
+        ],
+        "type": "rest_endpoint",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.controller.QuestionController.getQuestionById(\n            @PathVariable Long questionId,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId)",
+        "body": "@GetMapping(\"/{questionId}\")\n    public ResponseEntity<?> getQuestionById(\n            @PathVariable Long questionId,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            QuestionResponse question = questionService.getQuestionById(questionId, userId);\n            return ResponseEntity.ok(question);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
+        "ast_hash": "0caa7ff43901496dbdd628cd80534a8e",
+        "method_calls": [
+          {
+            "name": "com.example.demo.service.QuestionService.getQuestionById(Long questionId, Long userId)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [
+          "UNAUTHORIZED",
+          "INTERNAL_SERVER_ERROR"
+        ],
+        "inheritance_info": [],
+        "endpoint": [
+          {
+            "type": "GET",
+            "path": "/api/questions/{questionId}",
+            "produces": "",
+            "consumes": ""
+          }
+        ],
+        "type": "rest_endpoint",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.controller.QuestionController.updateQuestion(\n            @PathVariable Long questionId,\n            @Valid @RequestBody UpdateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult)",
+        "body": "@PutMapping(\"/{questionId}\")\n    public ResponseEntity<?> updateQuestion(\n            @PathVariable Long questionId,\n            @Valid @RequestBody UpdateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult) {\n        \n        try {\n            \n            if (bindingResult.hasErrors()) {\n                String errorMessage = bindingResult.getFieldErrors().stream()\n                    .map(error -> error.getField() + \": \" + error.getDefaultMessage())\n                    .collect(Collectors.joining(\", \"));\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(errorMessage, HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            \n            if (isUpdateRequestEmpty(request)) {\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(\"At least one field must be provided for update\", HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            QuestionResponse response = questionService.updateQuestion(questionId, request, userId);\n            return ResponseEntity.ok(response);\n            \n        } catch (IllegalArgumentException e) {\n            return ResponseEntity.badRequest()\n                .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value()));\n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\")) {\n                return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value()));\n            }\n            if (e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
+        "ast_hash": "0efc91fd9ba27cf144bf2eb26b763479",
+        "method_calls": [
+          {
+            "name": "com.example.demo.service.QuestionService.updateQuestion(Long questionId, UpdateQuestionRequest request, Long userId)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.controller.QuestionController.isUpdateRequestEmpty(UpdateQuestionRequest request)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.dto.QuestionResponse",
+          "com.example.demo.dto.UpdateQuestionRequest"
+        ],
+        "field_access": [
+          "UNAUTHORIZED",
+          "INTERNAL_SERVER_ERROR",
+          "NOT_FOUND",
+          "BAD_REQUEST"
+        ],
+        "inheritance_info": [],
+        "endpoint": [
+          {
+            "type": "PUT",
+            "path": "/api/questions/{questionId}",
+            "produces": "",
+            "consumes": ""
+          }
+        ],
+        "type": "rest_endpoint",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.controller.QuestionController.isUpdateRequestEmpty(UpdateQuestionRequest request)",
+        "body": "private boolean isUpdateRequestEmpty(UpdateQuestionRequest request) {\n        return request.getQuestionText() == null &&\n               request.getQuestionType() == null &&\n               request.getOptions() == null &&\n               request.getCorrectAnswer() == null &&\n               request.getExplanation() == null &&\n               request.getTags() == null &&\n               request.getDifficulty() == null &&\n               request.getQuizId() == null;\n    }",
+        "ast_hash": "3f6529416223cf5dd73bf355ed5e5f43",
+        "method_calls": [
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getQuestionText()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getCorrectAnswer()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getQuestionType()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getTags()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getQuizId()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getOptions()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getExplanation()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getDifficulty()",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.dto.UpdateQuestionRequest"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "2",
+    "branch": "feature/SCRUM-7",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.example.demo.dto",
+    "class_name": "UpdateQuestionRequest",
+    "full_class_name": "com.example.demo.dto.UpdateQuestionRequest",
+    "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\dto\\UpdateQuestionRequest.java",
+    "content": "public class UpdateQuestionRequest {\n    \n    private String questionText;\n    \n    @Pattern(regexp = \"multiple_choice|pronunciation|fill_in_the_blank\", \n             message = \"Question type must be one of: multiple_choice, pronunciation, fill_in_the_blank\")\n    private String questionType;\n    \n    @Valid\n    private List<QuestionOptionDto> options;\n    \n    private String correctAnswer;\n    \n    private String explanation;\n    \n    private List<String> tags;\n    \n    @Pattern(regexp = \"easy|medium|hard\", \n             message = \"Difficulty must be one of: easy, medium, hard\")\n    private String difficulty;\n    \n    private Long quizId;\n    \n    \n    public UpdateQuestionRequest() {}\n    \n    \n    public String getQuestionText() {\n        return questionText;\n    }\n    \n    public void setQuestionText(String questionText) {\n        this.questionText = questionText;\n    }\n    \n    public String getQuestionType() {\n        return questionType;\n    }\n    \n    public void setQuestionType(String questionType) {\n        this.questionType = questionType;\n    }\n    \n    public List<QuestionOptionDto> getOptions() {\n        return options;\n    }\n    \n    public void setOptions(List<QuestionOptionDto> options) {\n        this.options = options;\n    }\n    \n    public String getCorrectAnswer() {\n        return correctAnswer;\n    }\n    \n    public void setCorrectAnswer(String correctAnswer) {\n        this.correctAnswer = correctAnswer;\n    }\n    \n    public String getExplanation() {\n        return explanation;\n    }\n    \n    public void setExplanation(String explanation) {\n        this.explanation = explanation;\n    }\n    \n    public List<String> getTags() {\n        return tags;\n    }\n    \n    public void setTags(List<String> tags) {\n        this.tags = tags;\n    }\n    \n    public String getDifficulty() {\n        return difficulty;\n    }\n    \n    public void setDifficulty(String difficulty) {\n        this.difficulty = difficulty;\n    }\n    \n    public Long getQuizId() {\n        return quizId;\n    }\n    \n    public void setQuizId(Long quizId) {\n        this.quizId = quizId;\n    }\n}",
+    "ast_hash": "a1a1dcea21e6bdc0722a8fd7d6037600",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getQuestionText()",
+        "body": "public String getQuestionText() {\n        return questionText;\n    }",
+        "ast_hash": "89c549db5a5177745aa460f09037cb2a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setQuestionText(String questionText)",
+        "body": "public void setQuestionText(String questionText) {\n        this.questionText = questionText;\n    }",
+        "ast_hash": "177fb304d190630d2d8156faecdb0373",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "String questionText"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getQuestionType()",
+        "body": "public String getQuestionType() {\n        return questionType;\n    }",
+        "ast_hash": "89c549db5a5177745aa460f09037cb2a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setQuestionType(String questionType)",
+        "body": "public void setQuestionType(String questionType) {\n        this.questionType = questionType;\n    }",
+        "ast_hash": "177fb304d190630d2d8156faecdb0373",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "String questionType"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getOptions()",
+        "body": "public List<QuestionOptionDto> getOptions() {\n        return options;\n    }",
+        "ast_hash": "c275fcbc82e56b965c870ad261ee509d",
+        "method_calls": [],
+        "used_types": [
+          "com.example.demo.dto.QuestionOptionDto"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setOptions(List<QuestionOptionDto> options)",
+        "body": "public void setOptions(List<QuestionOptionDto> options) {\n        this.options = options;\n    }",
+        "ast_hash": "455b86e6c1038477691b57295f66618a",
+        "method_calls": [],
+        "used_types": [
+          "com.example.demo.dto.QuestionOptionDto"
+        ],
+        "field_access": [
+          "List<QuestionOptionDto> options"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getCorrectAnswer()",
+        "body": "public String getCorrectAnswer() {\n        return correctAnswer;\n    }",
+        "ast_hash": "89c549db5a5177745aa460f09037cb2a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setCorrectAnswer(String correctAnswer)",
+        "body": "public void setCorrectAnswer(String correctAnswer) {\n        this.correctAnswer = correctAnswer;\n    }",
+        "ast_hash": "177fb304d190630d2d8156faecdb0373",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "String correctAnswer"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getExplanation()",
+        "body": "public String getExplanation() {\n        return explanation;\n    }",
+        "ast_hash": "89c549db5a5177745aa460f09037cb2a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setExplanation(String explanation)",
+        "body": "public void setExplanation(String explanation) {\n        this.explanation = explanation;\n    }",
+        "ast_hash": "177fb304d190630d2d8156faecdb0373",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "String explanation"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getTags()",
+        "body": "public List<String> getTags() {\n        return tags;\n    }",
+        "ast_hash": "c275fcbc82e56b965c870ad261ee509d",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setTags(List<String> tags)",
+        "body": "public void setTags(List<String> tags) {\n        this.tags = tags;\n    }",
+        "ast_hash": "455b86e6c1038477691b57295f66618a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "List<String> tags"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getDifficulty()",
+        "body": "public String getDifficulty() {\n        return difficulty;\n    }",
+        "ast_hash": "89c549db5a5177745aa460f09037cb2a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setDifficulty(String difficulty)",
+        "body": "public void setDifficulty(String difficulty) {\n        this.difficulty = difficulty;\n    }",
+        "ast_hash": "177fb304d190630d2d8156faecdb0373",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "String difficulty"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.getQuizId()",
+        "body": "public Long getQuizId() {\n        return quizId;\n    }",
+        "ast_hash": "89c549db5a5177745aa460f09037cb2a",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.dto.UpdateQuestionRequest.setQuizId(Long quizId)",
+        "body": "public void setQuizId(Long quizId) {\n        this.quizId = quizId;\n    }",
+        "ast_hash": "177fb304d190630d2d8156faecdb0373",
+        "method_calls": [],
+        "used_types": [],
+        "field_access": [
+          "Long quizId"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "2",
+    "branch": "feature/SCRUM-7",
+    "is_nested": false,
+    "type": "regular"
+  },
+  {
+    "package": "com.example.demo.service",
+    "class_name": "QuestionService",
+    "full_class_name": "com.example.demo.service.QuestionService",
+    "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\service\\QuestionService.java",
+    "content": "@Service\n@Transactional\npublic class QuestionService {\n    \n    @Autowired\n    private QuestionRepository questionRepository;\n    \n    @Autowired\n    private UserRepository userRepository;\n    \n    @Autowired\n    private QuizRepository quizRepository;\n    \n    public QuestionResponse createQuestion(CreateQuestionRequest request, Long userId) {\n        \n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        \n        Quiz quiz = null;\n        if (request.getQuizId() != null) {\n            quiz = quizRepository.findByIdAndUser(request.getQuizId(), user)\n                .orElseThrow(() -> new RuntimeException(\"Quiz not found or access denied\"));\n        }\n        \n        \n        Question.QuestionType questionType = Question.QuestionType.fromValue(request.getQuestionType());\n        validateQuestionData(request, questionType);\n        \n        \n        Question question = new Question();\n        question.setQuestionText(request.getQuestionText());\n        question.setQuestionType(questionType);\n        question.setCorrectAnswer(request.getCorrectAnswer());\n        question.setExplanation(request.getExplanation());\n        question.setTags(request.getTags());\n        question.setUser(user);\n        question.setQuiz(quiz);\n        \n        if (request.getDifficulty() != null) {\n            question.setDifficulty(Question.Difficulty.fromValue(request.getDifficulty()));\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        \n        List<QuestionOption> options = new ArrayList<>();\n        if (request.getOptions() != null && !request.getOptions().isEmpty()) {\n            for (QuestionOptionDto optionDto : request.getOptions()) {\n                QuestionOption option = new QuestionOption();\n                option.setOptionText(optionDto.getOptionText());\n                option.setIsCorrect(optionDto.getIsCorrect());\n                option.setQuestion(question);\n                options.add(option);\n            }\n            question.setOptions(options);\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        return mapToResponse(question);\n    }\n    \n    public List<QuestionResponse> getUserQuestions(Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        List<Question> questions = questionRepository.findByUser(user);\n        return questions.stream()\n            .map(this::mapToResponse)\n            .collect(Collectors.toList());\n    }\n    \n    public QuestionResponse getQuestionById(Long questionId, Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        Question question = questionRepository.findByIdAndUser(questionId, user)\n            .orElseThrow(() -> new RuntimeException(\"Question not found or access denied\"));\n        \n        return mapToResponse(question);\n    }\n    \n    public QuestionResponse updateQuestion(Long questionId, UpdateQuestionRequest request, Long userId) {\n        \n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        \n        Question existingQuestion = questionRepository.findByIdAndUser(questionId, user)\n            .orElseThrow(() -> new RuntimeException(\"Question not found or access denied\"));\n        \n        \n        Quiz quiz = null;\n        if (request.getQuizId() != null) {\n            quiz = quizRepository.findByIdAndUser(request.getQuizId(), user)\n                .orElseThrow(() -> new RuntimeException(\"Quiz not found or access denied\"));\n        }\n        \n        \n        if (request.getQuestionText() != null && !request.getQuestionText().trim().isEmpty()) {\n            existingQuestion.setQuestionText(request.getQuestionText());\n        }\n        \n        if (request.getQuestionType() != null) {\n            Question.QuestionType questionType = Question.QuestionType.fromValue(request.getQuestionType());\n            existingQuestion.setQuestionType(questionType);\n            \n            \n            validateUpdateQuestionData(request, questionType);\n        }\n        \n        if (request.getCorrectAnswer() != null) {\n            existingQuestion.setCorrectAnswer(request.getCorrectAnswer());\n        }\n        \n        if (request.getExplanation() != null) {\n            existingQuestion.setExplanation(request.getExplanation());\n        }\n        \n        if (request.getTags() != null) {\n            existingQuestion.setTags(request.getTags());\n        }\n        \n        if (request.getDifficulty() != null) {\n            existingQuestion.setDifficulty(Question.Difficulty.fromValue(request.getDifficulty()));\n        }\n        \n        if (quiz != null) {\n            existingQuestion.setQuiz(quiz);\n        }\n        \n        \n        if (request.getOptions() != null) {\n            \n            existingQuestion.getOptions().clear();\n            \n            \n            List<QuestionOption> newOptions = new ArrayList<>();\n            for (QuestionOptionDto optionDto : request.getOptions()) {\n                QuestionOption option = new QuestionOption();\n                option.setOptionText(optionDto.getOptionText());\n                option.setIsCorrect(optionDto.getIsCorrect());\n                option.setQuestion(existingQuestion);\n                newOptions.add(option);\n            }\n            existingQuestion.setOptions(newOptions);\n        }\n        \n        \n        if (request.getQuestionType() != null || request.getOptions() != null) {\n            validateCompleteQuestion(existingQuestion);\n        }\n        \n        \n        Question updatedQuestion = questionRepository.save(existingQuestion);\n        \n        return mapToResponse(updatedQuestion);\n    }\n    \n    private void validateUpdateQuestionData(UpdateQuestionRequest request, Question.QuestionType questionType) {\n        switch (questionType) {\n            case MULTIPLE_CHOICE:\n                if (request.getOptions() != null) {\n                    if (request.getOptions().isEmpty()) {\n                        throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                    }\n                    \n                    long correctCount = request.getOptions().stream()\n                        .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                        .sum();\n                    \n                    if (correctCount == 0) {\n                        throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                    }\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (request.getCorrectAnswer() != null && request.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(questionType.getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }\n    \n    private void validateCompleteQuestion(Question question) {\n        switch (question.getQuestionType()) {\n            case MULTIPLE_CHOICE:\n                if (question.getOptions() == null || question.getOptions().isEmpty()) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                }\n                \n                long correctCount = question.getOptions().stream()\n                    .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                    .sum();\n                \n                if (correctCount == 0) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (question.getCorrectAnswer() == null || question.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(question.getQuestionType().getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }\n    \n    private void validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType) {\n        switch (questionType) {\n            case MULTIPLE_CHOICE:\n                if (request.getOptions() == null || request.getOptions().isEmpty()) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                }\n                \n                long correctCount = request.getOptions().stream()\n                    .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                    .sum();\n                \n                if (correctCount == 0) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (request.getCorrectAnswer() == null || request.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(questionType.getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }\n    \n    private QuestionResponse mapToResponse(Question question) {\n        List<QuestionOptionDto> optionDtos = null;\n        if (question.getOptions() != null && !question.getOptions().isEmpty()) {\n            optionDtos = question.getOptions().stream()\n                .map(option -> new QuestionOptionDto(option.getOptionText(), option.getIsCorrect()))\n                .collect(Collectors.toList());\n        }\n        \n        return new QuestionResponse(\n            question.getId().toString(),\n            question.getQuestionText(),\n            question.getQuestionType().getValue(),\n            optionDtos,\n            question.getCorrectAnswer(),\n            question.getExplanation(),\n            question.getTags(),\n            question.getDifficulty() != null ? question.getDifficulty().getValue() : null,\n            question.getCreatedAt()\n        );\n    }\n}",
+    "ast_hash": "2fb40d8462686484f17e95ba2b6ee453",
+    "implements": [],
+    "methods": [
+      {
+        "name": "com.example.demo.service.QuestionService.createQuestion(CreateQuestionRequest request, Long userId)",
+        "body": "public QuestionResponse createQuestion(CreateQuestionRequest request, Long userId) {\n        \n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        \n        Quiz quiz = null;\n        if (request.getQuizId() != null) {\n            quiz = quizRepository.findByIdAndUser(request.getQuizId(), user)\n                .orElseThrow(() -> new RuntimeException(\"Quiz not found or access denied\"));\n        }\n        \n        \n        Question.QuestionType questionType = Question.QuestionType.fromValue(request.getQuestionType());\n        validateQuestionData(request, questionType);\n        \n        \n        Question question = new Question();\n        question.setQuestionText(request.getQuestionText());\n        question.setQuestionType(questionType);\n        question.setCorrectAnswer(request.getCorrectAnswer());\n        question.setExplanation(request.getExplanation());\n        question.setTags(request.getTags());\n        question.setUser(user);\n        question.setQuiz(quiz);\n        \n        if (request.getDifficulty() != null) {\n            question.setDifficulty(Question.Difficulty.fromValue(request.getDifficulty()));\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        \n        List<QuestionOption> options = new ArrayList<>();\n        if (request.getOptions() != null && !request.getOptions().isEmpty()) {\n            for (QuestionOptionDto optionDto : request.getOptions()) {\n                QuestionOption option = new QuestionOption();\n                option.setOptionText(optionDto.getOptionText());\n                option.setIsCorrect(optionDto.getIsCorrect());\n                option.setQuestion(question);\n                options.add(option);\n            }\n            question.setOptions(options);\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        return mapToResponse(question);\n    }",
+        "ast_hash": "5a2ff9eefeb8e8af6d746593e6373f5d",
+        "method_calls": [
+          {
+            "name": "com.example.demo.repository.QuizRepository.findByIdAndUser(Long id, User user)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.service.QuestionService.validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.entity.Question.QuestionType",
+          "com.example.demo.entity.User",
+          "com.example.demo.entity.Question",
+          "com.example.demo.entity.Quiz",
+          "com.example.demo.entity.QuestionOption",
+          "com.example.demo.dto.CreateQuestionRequest",
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [
+          "com.example.demo.entity.Question.QuestionType",
+          "com.example.demo.entity.Question.Difficulty"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.getUserQuestions(Long userId)",
+        "body": "public List<QuestionResponse> getUserQuestions(Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        List<Question> questions = questionRepository.findByUser(user);\n        return questions.stream()\n            .map(this::mapToResponse)\n            .collect(Collectors.toList());\n    }",
+        "ast_hash": "9de778e932a8cb8f05b3afdf379460ac",
+        "method_calls": [
+          {
+            "name": "com.example.demo.repository.QuestionRepository.findByUser(User user)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.entity.Question",
+          "com.example.demo.dto.QuestionResponse",
+          "com.example.demo.entity.User"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.getQuestionById(Long questionId, Long userId)",
+        "body": "public QuestionResponse getQuestionById(Long questionId, Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        Question question = questionRepository.findByIdAndUser(questionId, user)\n            .orElseThrow(() -> new RuntimeException(\"Question not found or access denied\"));\n        \n        return mapToResponse(question);\n    }",
+        "ast_hash": "81344bdb80cb227eb7183c30abc3f8de",
+        "method_calls": [
+          {
+            "name": "com.example.demo.repository.QuestionRepository.findByIdAndUser(Long id, User user)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.entity.User",
+          "com.example.demo.entity.Question",
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.updateQuestion(Long questionId, UpdateQuestionRequest request, Long userId)",
+        "body": "public QuestionResponse updateQuestion(Long questionId, UpdateQuestionRequest request, Long userId) {\n        \n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        \n        Question existingQuestion = questionRepository.findByIdAndUser(questionId, user)\n            .orElseThrow(() -> new RuntimeException(\"Question not found or access denied\"));\n        \n        \n        Quiz quiz = null;\n        if (request.getQuizId() != null) {\n            quiz = quizRepository.findByIdAndUser(request.getQuizId(), user)\n                .orElseThrow(() -> new RuntimeException(\"Quiz not found or access denied\"));\n        }\n        \n        \n        if (request.getQuestionText() != null && !request.getQuestionText().trim().isEmpty()) {\n            existingQuestion.setQuestionText(request.getQuestionText());\n        }\n        \n        if (request.getQuestionType() != null) {\n            Question.QuestionType questionType = Question.QuestionType.fromValue(request.getQuestionType());\n            existingQuestion.setQuestionType(questionType);\n            \n            \n            validateUpdateQuestionData(request, questionType);\n        }\n        \n        if (request.getCorrectAnswer() != null) {\n            existingQuestion.setCorrectAnswer(request.getCorrectAnswer());\n        }\n        \n        if (request.getExplanation() != null) {\n            existingQuestion.setExplanation(request.getExplanation());\n        }\n        \n        if (request.getTags() != null) {\n            existingQuestion.setTags(request.getTags());\n        }\n        \n        if (request.getDifficulty() != null) {\n            existingQuestion.setDifficulty(Question.Difficulty.fromValue(request.getDifficulty()));\n        }\n        \n        if (quiz != null) {\n            existingQuestion.setQuiz(quiz);\n        }\n        \n        \n        if (request.getOptions() != null) {\n            \n            existingQuestion.getOptions().clear();\n            \n            \n            List<QuestionOption> newOptions = new ArrayList<>();\n            for (QuestionOptionDto optionDto : request.getOptions()) {\n                QuestionOption option = new QuestionOption();\n                option.setOptionText(optionDto.getOptionText());\n                option.setIsCorrect(optionDto.getIsCorrect());\n                option.setQuestion(existingQuestion);\n                newOptions.add(option);\n            }\n            existingQuestion.setOptions(newOptions);\n        }\n        \n        \n        if (request.getQuestionType() != null || request.getOptions() != null) {\n            validateCompleteQuestion(existingQuestion);\n        }\n        \n        \n        Question updatedQuestion = questionRepository.save(existingQuestion);\n        \n        return mapToResponse(updatedQuestion);\n    }",
+        "ast_hash": "a05380dee00059bc604d9a6a161a4e65",
+        "method_calls": [
+          {
+            "name": "com.example.demo.service.QuestionService.validateUpdateQuestionData(UpdateQuestionRequest request, Question.QuestionType questionType)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getQuestionType()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getExplanation()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getTags()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getOptions()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getQuestionText()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getDifficulty()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getQuizId()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getCorrectAnswer()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.repository.QuestionRepository.findByIdAndUser(Long id, User user)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.repository.QuizRepository.findByIdAndUser(Long id, User user)",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.service.QuestionService.validateCompleteQuestion(Question question)",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.entity.User",
+          "com.example.demo.entity.Question.QuestionType",
+          "com.example.demo.entity.Question",
+          "com.example.demo.entity.Quiz",
+          "com.example.demo.dto.UpdateQuestionRequest",
+          "com.example.demo.entity.QuestionOption",
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [
+          "com.example.demo.entity.Question.QuestionType",
+          "com.example.demo.entity.Question.Difficulty"
+        ],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.validateUpdateQuestionData(UpdateQuestionRequest request, Question.QuestionType questionType)",
+        "body": "private void validateUpdateQuestionData(UpdateQuestionRequest request, Question.QuestionType questionType) {\n        switch (questionType) {\n            case MULTIPLE_CHOICE:\n                if (request.getOptions() != null) {\n                    if (request.getOptions().isEmpty()) {\n                        throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                    }\n                    \n                    long correctCount = request.getOptions().stream()\n                        .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                        .sum();\n                    \n                    if (correctCount == 0) {\n                        throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                    }\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (request.getCorrectAnswer() != null && request.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(questionType.getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }",
+        "ast_hash": "46baf708ebfcfa53dfcf34abcc16cf37",
+        "method_calls": [
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getOptions()",
+            "params": []
+          },
+          {
+            "name": "com.example.demo.dto.UpdateQuestionRequest.getCorrectAnswer()",
+            "params": []
+          }
+        ],
+        "used_types": [
+          "com.example.demo.entity.Question.QuestionType",
+          "com.example.demo.dto.UpdateQuestionRequest"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.validateCompleteQuestion(Question question)",
+        "body": "private void validateCompleteQuestion(Question question) {\n        switch (question.getQuestionType()) {\n            case MULTIPLE_CHOICE:\n                if (question.getOptions() == null || question.getOptions().isEmpty()) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                }\n                \n                long correctCount = question.getOptions().stream()\n                    .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                    .sum();\n                \n                if (correctCount == 0) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (question.getCorrectAnswer() == null || question.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(question.getQuestionType().getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }",
+        "ast_hash": "71ba3bc7b524a16a5ad16a0fd49aca06",
+        "method_calls": [],
+        "used_types": [
+          "com.example.demo.entity.Question"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType)",
+        "body": "private void validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType) {\n        switch (questionType) {\n            case MULTIPLE_CHOICE:\n                if (request.getOptions() == null || request.getOptions().isEmpty()) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                }\n                \n                long correctCount = request.getOptions().stream()\n                    .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                    .sum();\n                \n                if (correctCount == 0) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (request.getCorrectAnswer() == null || request.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(questionType.getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }",
+        "ast_hash": "8c6d5a588d5856901c6884fbf83f9440",
+        "method_calls": [],
+        "used_types": [
+          "com.example.demo.entity.Question.QuestionType",
+          "com.example.demo.dto.CreateQuestionRequest"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      },
+      {
+        "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
+        "body": "private QuestionResponse mapToResponse(Question question) {\n        List<QuestionOptionDto> optionDtos = null;\n        if (question.getOptions() != null && !question.getOptions().isEmpty()) {\n            optionDtos = question.getOptions().stream()\n                .map(option -> new QuestionOptionDto(option.getOptionText(), option.getIsCorrect()))\n                .collect(Collectors.toList());\n        }\n        \n        return new QuestionResponse(\n            question.getId().toString(),\n            question.getQuestionText(),\n            question.getQuestionType().getValue(),\n            optionDtos,\n            question.getCorrectAnswer(),\n            question.getExplanation(),\n            question.getTags(),\n            question.getDifficulty() != null ? question.getDifficulty().getValue() : null,\n            question.getCreatedAt()\n        );\n    }",
+        "ast_hash": "2e4a1af4b51546e9fa92cbb7f3501793",
+        "method_calls": [],
+        "used_types": [
+          "com.example.demo.entity.Question",
+          "com.example.demo.dto.QuestionOptionDto",
+          "com.example.demo.dto.QuestionResponse"
+        ],
+        "field_access": [],
+        "inheritance_info": [],
+        "endpoint": [],
+        "type": "regular",
+        "project_id": "2",
+        "branch": "feature/SCRUM-7"
+      }
+    ],
+    "parent_class": [
+      null
+    ],
+    "project_id": "2",
+    "branch": "feature/SCRUM-7",
+    "is_nested": false,
+    "type": "regular"
+  }
+]

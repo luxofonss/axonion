@@ -39,5 +39,14 @@ class Container(containers.DeclarativeContainer):
         project_repository=project_repository,
         git_service=git_service,
         neo4j_service=neo4j_service,
+        branch_snapshot_repository=branch_snapshot_repository,
     )
+    
+    @classmethod
+    def setup_circular_dependencies(cls):
+        """Setup circular dependencies after container initialization"""
+        container = cls()
+        branch_snapshot_service = container.branch_snapshot_service()
+        project_service = container.project_service()
+        branch_snapshot_service.set_project_service(project_service)
 
