@@ -37,7 +37,8 @@ class BaseCodeAnalyzer(ABC):
         self.methods_cache = set()  # Use set for efficient lookup
         self.lsp_service: LSPService = None
 
-    def parse_project(self, root: Path, target_files: Optional[List[str]] = None, parse_all: bool = True, export_output: bool = True) -> List[CodeChunk]:
+    def parse_project(self, root: Path, target_files: Optional[List[str]] = None, parse_all: bool = True,
+                      export_output: bool = True) -> List[CodeChunk]:
         logger.info(f"Starting analysis for project '{self.project_id}' at {root}")
 
         code_files = self._get_code_files(root)
@@ -122,6 +123,8 @@ class BaseCodeAnalyzer(ABC):
                     context.full_class_name, file_path, context.import_mapping
                 )
 
+                used_types = self.extract_class_use_types(class_node, content, file_path)
+
                 # Compute AST hash for the class content
                 class_content = content[class_node.start_byte:class_node.end_byte]
                 ast_hash = self.compute_ast_hash(class_content)
@@ -139,7 +142,8 @@ class BaseCodeAnalyzer(ABC):
                     parent_class=context.parent_class,
                     type=ChunkType.CONFIGURATION if context.is_config else ChunkType.REGULAR,
                     project_id=self.project_id,
-                    branch=self.branch
+                    branch=self.branch,
+                    used_types=used_types
                 )
         except Exception as e:
             logger.error(f"Error parsing class node: {e}")
@@ -278,6 +282,12 @@ class BaseCodeAnalyzer(ABC):
             List of method names found in the class
         """
         pass
+
+
+    @abstractmethod
+    def extract_class_use_types(self, class_node, content, file_path):
+        pass
+
 
     def _filter_files_by_targets(self, code_files: List[Path], target_files: Optional[List[str]]) -> List[Path]:
         """

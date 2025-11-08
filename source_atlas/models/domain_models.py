@@ -88,6 +88,7 @@ class CodeChunk:
     parent_class: Optional[str]
     project_id: str
     branch: str
+    used_types: Tuple[str,...]
     is_nested: bool = False
     type: ChunkType = ChunkType.REGULAR
 

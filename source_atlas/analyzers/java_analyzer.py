@@ -1,7 +1,9 @@
+import hashlib
 import re
+from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple
 
 from loguru import logger
 from tree_sitter import Language, Parser, Node, Query, QueryCursor
@@ -13,8 +15,6 @@ from source_atlas.lsp.implements.java_lsp import JavaLSPService
 from source_atlas.models.domain_models import Method, MethodCall, ChunkType
 from source_atlas.utils.comment_remover import JavaCommentRemover
 from source_atlas.utils.tree_sitter_helper import extract_content
-import hashlib
-import re
 
 
 class JavaBuiltinPackages:
@@ -213,6 +213,56 @@ class JavaParsingConstants:
         "@ConditionalOnBean",
     }
 
+    CONFIG_INTERFACES_CLASSES = {
+        # Spring Boot Configuration
+        "WebMVCConfigure",
+        "WebSecurityConfigurerAdapter",
+        "SecurityConfigurerAdapter",
+        "WebFluxConfigurer",
+        "ReactiveWebServerFactoryCustomizer",
+        "WebServerFactoryCustomizer",
+        "EmbeddedServletContainerCustomizer"
+        
+        # Spring Framework Configuration
+        "ApplicationContextInitializer",
+        "ApplicationListener",
+        "ApplicationRunner",
+        "CommandLineRunner",
+        "EnvironmentPostProcessor",
+        "BeanPostProcessor",
+        "BeanFactoryPostProcessor",
+        "InitializingBean",
+        "DisposableBean",
+
+        # Web Configuration
+        "HandlerInterceptor",
+        "handlerMethodArgumentResolver",
+        "HandlerMethodReturnValueHandler",
+        "MessageConverter",
+        "Filter",
+        "Servlet",
+        "ServletContextListener",
+
+        # Security Configuration
+        "AuthenticationProvider",
+        "UserDetailsService",
+        "PasswordEncoder",
+        "AccessDecisionVoter",
+        "AccessDecisionManager",
+
+        # Data Configuration
+        "RedisTemplate",
+
+        # Aspect Configuration
+        "MethodInterceptor",
+        "Advisor",
+        "Pointcut",
+
+        # Validation Configuration
+        "Validator",
+        "ConstrainValidator"
+    }
+
 
 @dataclass
 class MethodDependencies:
@@ -229,7 +279,7 @@ class JavaCodeAnalyzerConstant:
     JAVA_EXTENSION = "*.java"
 
 
-class JavaCodeAnalyzer(BaseCodeAnalyzer):
+class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
 
     def __init__(self, root_path: str = None, project_id: str = None, branch: str = None):
         # Tree-sitter setup
@@ -253,11 +303,72 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
                 JavaBuiltinPackages.COMMON_LIBRARY_PACKAGES
         )
 
-    def compute_normalized_hash(self, code: str) -> str:
-        """
-        Compute hash using normalized code (fallback when Tree-sitter is not available)
-        """
-        return hashlib.md5(code.encode('utf-8')).hexdigest()
+
+    def __enter__(self):
+        self._server_ctx = self.lsp_service.start_server()
+        self._server_ctx.__enter__()
+        return self
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._server_ctx:
+            self._server_ctx.__exit__(exc_type, exc_val, exc_tb)
+
+
+    def _extract_implements_extends(self, class_node: Node, content: str) -> List[str]:
+        """Extract class names from implements and extends clauses using tree-sitter query"""
+        try:
+            query = Query(self.language, """
+                (superclass (type_identifier) @extends_class)
+                (super_interfaces (type_list (_ (type_identifier) @implements_class)))
+            """)
+
+            captures = QueryCursor(query).captures(class_node)
+
+            classes = []
+            for capture_name, nodes in captures.items():
+                for node in nodes:
+                    class_name = extract_content(node, content)
+                    if class_name:
+                        classes.append(class_name)
+
+            return classes
+        except Exception as e:
+            logger.debug(f"Error extracting implements/extends: {e}")
+            return []
+
+
+    def _is_config_node(self, node: Node, content: str):
+        """Check if node is a configuration node based on annotations or implements/extends"""
+        if node.type not in JavaParsingConstants.CLASS_NODE_TYPES:
+            return False
+
+        return self._has_config_annotations(node, content) or self._has_config_interfaces(node, content)
+
+    def _has_config_annotations(self, node: Node, content: str) -> bool:
+        """Check if node has configuration annotations"""
+        try:
+            query = Query(self.language, """
+                (modifiers (annotation) @annotation)
+                (modifiers (maker_annotation) @annotation)
+            """)
+
+            captures = QueryCursor(query).captures(node)
+            for nodes in captures.values():
+                for annotation_node in nodes:
+                    annotation_text = extract_content(annotation_node, content)
+                    if any(anno in annotation_text for anno in JavaParsingConstants.CONFIG_NODE_ANNOTATIONS):
+                        return True
+            return False
+        except Exception as e:
+            logger.debug(f"Error _has_config_annotations: {e}")
+        return False
+
+    def _has_config_interfaces(self, node: Node, content: str) -> bool:
+        """Check if node implements/extends configuration interfaces"""
+        implemented_classes = self._extract_implements_extends(node, content)
+        return any(class_name in JavaParsingConstants.CONFIG_INTERFACES_CLASSES for class_name in implemented_classes)
+
 
     def compute_ast_hash(self, code: str) -> str:
         """
@@ -273,43 +384,34 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
                 # Skip comments and whitespace nodes
                 if node.type in ("comment", "block_comment", "line_comment", "line_comment", "modifiers"):
                     return ""
-                
+
                 # For leaf nodes, include the type but not the content
                 if not node.children:
                     return f"{node.type}"
-                
+
                 # For internal nodes, include type and children
                 children_repr = []
                 for child in node.children:
                     child_repr = walk_ast(child)
                     if child_repr:  # Only include non-empty children
                         children_repr.append(child_repr)
-                
+
                 if children_repr:
                     return f"{node.type}({','.join(children_repr)})"
                 else:
                     return f"{node.type}"
 
             ast_repr = walk_ast(root)
-            return hashlib.md5(ast_repr.encode()).hexdigest()
-            
+            return hashlib.sha256(ast_repr.encode()).hexdigest()
+
         except Exception as e:
             logger.debug(f"Error computing Java AST hash, falling back to normalized hash: {e}")
             # Fallback to normalized content hash
-            return self.compute_normalized_hash(code)
+            return None
 
-    def __enter__(self):
-        self._server_ctx = self.lsp_service.start_server()
-        self._server_ctx.__enter__()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._server_ctx:
-            self._server_ctx.__exit__(exc_type, exc_val, exc_tb)
-
-    # ---- extension points ----
     def _get_code_files(self, root: Path) -> List[Path]:
         return list(root.rglob(JavaCodeAnalyzerConstant.JAVA_EXTENSION))
+
 
     def _extract_package(self, root_node: Node, content: str) -> str:
         try:
@@ -402,7 +504,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
                         method_names.append(method_name_only)
         except Exception as e:
             logger.debug(f"Error extracting method names from class: {e}")
-            
+
         return method_names
 
     def _is_nested_class(self, class_node: Node, root_node: Node) -> bool:
@@ -456,16 +558,16 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         # Check if it's an interface
         if class_node.type == 'interface_declaration':
             return True
-        
+
         # Check if it's an abstract class
         for child in class_node.children:
             if child.type == 'modifiers':
                 text_modifiers = extract_content(child, content)
                 if 'abstract' in text_modifiers:
                     return True
-        
+
         return False
-    
+
     def _extract_implements_with_lsp(self, class_node: Node, file_path: str, content: str) -> List[str]:
         if not self.lsp_service:
             return []
@@ -533,12 +635,12 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
                 absolute_path = result.get('absolutePath')
                 if absolute_path and isinstance(absolute_path, str):
                     absolute_path = self._extract_qualified_name_from_lsp_result(result)
-                    qualified_name = self.extract_method_with_params_from_lsp_result(result)
+                    qualified_name = self._extract_method_with_params_from_lsp_result(result)
                     logger.info(f"qualified_name {absolute_path}.{qualified_name}")
                     response.append(f"{absolute_path}.{qualified_name}")
         return response
 
-    def extract_method_with_params_from_lsp_result(self, lsp_result: dict) -> str:
+    def _extract_method_with_params_from_lsp_result(self, lsp_result: dict) -> str:
         try:
             # Get file path and position info
             file_path = lsp_result.get('absolutePath') or lsp_result.get('uri', '').replace('file:///', '')
@@ -581,11 +683,11 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
     def _is_lombok_generated_position(self, root_node: Node, target_line: int, content: str) -> bool:
         """Check if the target line contains Lombok annotations that generate methods"""
         LOMBOK_METHOD_ANNOTATIONS = {
-            '@Data', '@Getter', '@Setter', '@Builder', 
+            '@Data', '@Getter', '@Setter', '@Builder',
             '@AllArgsConstructor', '@NoArgsConstructor', '@RequiredArgsConstructor',
             '@ToString', '@EqualsAndHashCode', '@Value'
         }
-        
+
         try:
             lines = content.split('\n')
             if target_line < len(lines):
@@ -597,31 +699,24 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
 
     def _find_method_at_position(self, root_node: Node, target_line: int, target_char: int) -> Optional[Node]:
         """Find the method declaration node that contains the target position"""
+        try:
+            query = Query(self.language, "(method_declaration) @method")
+            captures = QueryCursor(query).captures(root_node)
 
-        def find_method_recursive(node: Node) -> Optional[Node]:
-            # Check if this node is a method declaration
-            if node.type == 'method_declaration':
-                # Check if the target position is within this method's identifier
-                for child in node.children:
-                    if child.type == 'identifier':
-                        start_line = child.start_point[0]
-                        end_line = child.end_point[0]
-                        start_char = child.start_point[1]
-                        end_char = child.end_point[1]
-
-                        if (start_line == target_line and
-                                start_char <= target_char <= end_char):
-                            return node
-
-            # Recursively search children
-            for child in node.children:
-                result = find_method_recursive(child)
-                if result:
-                    return result
-
+            for method_node in captures.get('method', []):
+                if self._is_position_in_method_identifier(method_node, target_line, target_char):
+                    return method_node
+            return None
+        except Exception as e:
+            logger.debug(f"Error finding method at position: {e}")
             return None
 
-        return find_method_recursive(root_node)
+    def _is_position_in_method_identifier(self, method_node: Node, target_line: int, target_char: int) -> bool:
+        for child in method_node.children:
+            if child.type == 'identifier':
+                return (child.start_point[0] == target_line and
+                        child.start_point[1] <= target_char <= child.end_point[1])
+        return False
 
     def _resolve_lsp_type_response(self, lsp_results, type_name: str = None) -> Optional[str]:
         if not lsp_results:
@@ -631,20 +726,35 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         results = lsp_results if isinstance(lsp_results, list) else [lsp_results]
 
         for result in results:
-            if isinstance(result, dict):
-                absolute_path = result.get('absolutePath')
-                if absolute_path and isinstance(absolute_path, str):
-                    qualified_name = self._extract_qualified_name_from_lsp_result(result)
-                    if type_name and type_name != "var" and "." in qualified_name:
-                        class_type = qualified_name.split(".")[-1]
-                        if class_type != type_name:
-                            if "." in type_name:
-                                qualified_name = qualified_name.rsplit(".", 1)[0] + "." + type_name
-                            else:
-                                qualified_name = qualified_name.rstrip(".") + "." + type_name
-                    if qualified_name:
-                        return qualified_name
+            qualified_name = self._extract_qualified_name_from_result(result)
+            if qualified_name:
+                return self._adjust_qualified_name_for_type(qualified_name, type_name)
         return None
+
+
+    def _extract_qualified_name_from_result(self, result) -> Optional[str]:
+        if not isinstance(result, dict):
+            return None
+
+        absolute_path = result.get('absolutePath')
+        if not (absolute_path and isinstance(absolute_path, str)):
+            return None
+
+        return self._extract_method_with_params_from_lsp_result(result)
+
+
+    def _adjust_qualified_name_for_type(self, qualified_name: str, type_name: str) -> str:
+        if not (type_name and type_name != "var" and "." in qualified_name):
+            return qualified_name
+
+        class_type = qualified_name.split('.')[-1]
+        if class_type == type_name:
+            return qualified_name
+
+        if "." in type_name:
+            return qualified_name.rsplit(".", 1)[0] + "." + type_name
+        else:
+            return qualified_name.rstrip(".") + "." + type_name
 
     # Method Processing
     def _extract_class_methods(self, class_node: Node, content: str,
@@ -693,7 +803,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
             inheritance_info = []
             if implements and self._should_check_inheritance(method_node):
                 inheritance_info = self._build_inheritance_info(method_node, method_name_node, file_path)
-            
+
             is_configuration = self._is_config_node(method_node, content)
 
             method_type = ChunkType.REGULAR
@@ -732,50 +842,8 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
     ) -> List[MethodCall]:
         method_calls: List[MethodCall] = []
         try:
-            call_query = Query(self.language, """
-            [
-              (method_invocation
-                object: (_) @object
-                name: (identifier) @method_name
-                arguments: (argument_list)? @arguments
-              ) @call
-    
-              (method_invocation
-                name: (identifier) @method_name
-                arguments: (argument_list)? @arguments
-              ) @call
-            ]
-            """)
-
-            captures = QueryCursor(call_query).captures(method_node)
-
-            call_nodes = captures.get("call", [])
-            object_nodes = captures.get("object", [])
-            method_nodes = captures.get("method_name", [])
-            args_nodes = captures.get("arguments", [])
-
-            for i, call_node in enumerate(call_nodes):
-                object_node = object_nodes[i] if i < len(object_nodes) else None
-                object_name = extract_content(object_node, content) if object_node else None
-
-                if object_name and object_name in JavaBuiltinPackages.JAVA_PRIMITIVES:
-                    continue
-                name_node = method_nodes[i] if i < len(method_nodes) else None
-                method_name = extract_content(name_node, content)
-                if method_name and method_name not in self.methods_cache:
-                    logger.info(f"Method {method_name} not in methods cache")
-                    continue
-                try:                    
-                    args_node = args_nodes[i] if i < len(args_nodes) else None
-
-                    resolved = self._resolve_method_call(name_node, args_node, file_path, content)
-                    if resolved:
-                        # nếu MethodCall có field object_name thì gán
-                        if object_name and hasattr(resolved, "object_name"):
-                            resolved.object_name = object_name
-                        method_calls.append(resolved)
-                except Exception:
-                    pass
+            captures = self._query_method_invocations(method_node)
+            return self._process_method_call_captures(captures, file_path, content)
 
         except Exception as e:
             logger.debug(f"Error extracting method calls: {e}")
@@ -838,7 +906,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         return list(field_access)
 
     def _extract_used_types(self, body_node: Node, file_path: str, content: str, import_mapping: Dict[str, str]) -> \
-    List[str]:
+            List[str]:
         used_types = set()
         try:
             variable_query = Query(self.language, """
@@ -884,47 +952,63 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
             return None
 
         try:
-            line = node.start_point[0]
-            col = node.start_point[1]
 
             # args_val = extract_content(args, Path(file_path).read_text())
-            lsp_result = self.lsp_service.request_definition(file_path, line, col)
-            result = lsp_result[0]
-            full_method_def = ""
-            if isinstance(result, dict):
-                raw_absolute_path = result.get('absolutePath')
+            lsp_result = self.lsp_service.request_definition(file_path, node.start_point[0], node.start_point[1])
+            full_method_def = self._build_method_definition(lsp_result[0])
 
-                if raw_absolute_path and isinstance(raw_absolute_path, str):
-                    absolute_path = self._strip_root(raw_absolute_path)
-                    if not absolute_path:
-                        return None
-                    qualified_name = self.extract_method_with_params_from_lsp_result(result)
-                    if not qualified_name:
-                        return None
-                    method_called_content = Path(raw_absolute_path).read_text(encoding='utf-8')
-                    tree = self.parser.parse(bytes(method_called_content, 'utf8'))
-                    class_nodes = self._extract_all_class_nodes(tree.root_node)
-                    if class_nodes and len(class_nodes) > 1:
-                        line = result.get('range').get('start').get('line')
-                        col = result.get('range').get('start').get('character')
-                        lsp_hover = self.lsp_service.request_hover(raw_absolute_path, line, col)
-                        if not lsp_hover:
-                            return None
-                        method_value = lsp_hover.get('contents').get('value')
-                        absolute_path = self._resolve_class_from_hover(method_value)
-                        # request hover to get class name
-                    full_method_def = f"{absolute_path}.{qualified_name}"
-            if not full_method_def:
-                return None
-            params = []
 
-            return MethodCall(
-                name=full_method_def,
-                params=params
-            )
 
         except Exception as e:
             logger.debug(f"LSP method call resolution failed: {e}")
+            return None
+
+
+    def _build_method_definition(self, result: dict) -> Optional[str]:
+        if not isinstance(result, dict):
+            return None
+
+        raw_absolute_path = result.get('absolutePath')
+        if not (raw_absolute_path and isinstance(raw_absolute_path, str)):
+            return None
+
+        absolute_path = self._strip_root(raw_absolute_path)
+        if not absolute_path:
+            return None
+
+        qualified_name = self._extract_method_with_params_from_lsp_result(result)
+        if not qualified_name:
+            return None
+
+        if self._has_multiple_classes(raw_absolute_path):
+            absolute_path = self._resolve_class_pay_with_hover(result, raw_absolute_path)
+            if not absolute_path:
+                return None
+
+        return f"{absolute_path}.{qualified_name}"
+
+    def _has_multiple_classes(self, file_path: str) -> bool:
+        try:
+            content = Path(file_path).read_text(encoding='utf-8')
+            tree = self.parser.parse(content.encode('utf-8'))
+            class_nodes = self._extract_all_class_nodes(tree.root_node)
+            return len(class_nodes) > 1
+        except Exception as e:
+            logger.debug(f"Error checking multiple classes: {e}")
+            return False
+
+    def _resolve_class_path_with_hover(self, result: dict, file_path: str) -> Optional[str]:
+        try:
+            line = result.get('range', {}).get('start', {}).get('line')
+            col = result.get('range', {}).get('start', {}).get('character')
+
+            lsp_hover = self.lsp_service.request_hover(file_path, line, col)
+            if not lsp_hover:
+                return None
+
+            method_value = lsp_hover.get('contents', {}).get('value')
+            return self._resolve_class_from_hover(method_value)
+        except Exception:
             return None
 
     def _resolve_class_from_hover(self, signature: str) -> str:
@@ -959,6 +1043,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         except Exception as e:
             logger.debug(f"LSP variable resolution failed: {e}")
             return None
+
 
     def _resolve_field_access_with_lsp(self, node: Node, file_path: str) -> Optional[str]:
         if not self.lsp_service:
@@ -1004,7 +1089,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
             if child.type == 'block' or child.type == 'constructor_body':
                 return False
         return True
-    
+
     def _build_inheritance_info(self, method_node: Node, method_name_node: Node, file_path: str) -> List[str]:
         line = method_name_node.start_point[0]
         col = method_name_node.start_point[1]
@@ -1012,6 +1097,33 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
         lsp_results = self.lsp_service.request_implementation(file_path, line, col)
         logger.info(f'request_implementation 2 done')
         return self._resolve_lsp_method_implements(lsp_results)
+
+
+    def extract_class_use_types(self, class_node, content, file_path) -> Tuple[str,...]:
+        used_types = set()
+        try:
+            field_query = Query(self.language, """
+                (field_declaration
+                    type: (_
+                            (type_arguments (_) @generic_type)?
+                        ) @field_type
+                    )
+            """)
+            query_cursor = QueryCursor(field_query)
+            captures = query_cursor.captures(class_node)
+
+            for capture_name, nodes in captures.items():
+                if capture_name in {"field_type", "generic_type"}:
+                    for node in nodes:
+                        type_text = extract_content(node, content)
+                        resolved_type = self._resolve_used_type_with_lsp(node, file_path, type_text)
+                        if resolved_type:
+                            used_types.add(resolved_type)
+
+        except Exception as e:
+            logger.debug(f"Error extracting class use types: {e}")
+
+        return tuple(self.filter(list(used_types)))
 
     def _remove_prefix(self, path: str) -> str:
         prefix = "src.main.java."
@@ -1096,25 +1208,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
 
         return filtered
 
-    def _is_config_node(self, node: Node, content: str):
-        is_config = False
-        try:
-            for child in node.children:
-                if child.type != 'modifiers':
-                    continue
-                for grandchild in child.children:
-                    if grandchild.type != 'annotation' and grandchild.type != 'marker_annotation':
-                        continue
-                    text = content[grandchild.start_byte:grandchild.end_byte]
 
-                    if text in JavaParsingConstants.CONFIG_NODE_ANNOTATIONS:
-                        is_config = True
-                        break
-
-            return is_config
-        except Exception as ex:
-            logger.warn(f"_is_config_class error {ex}")
-            return None
 
     def build_import_mapping(self, class_node: Node, content: str) -> Dict[str, str]:
 
@@ -1147,3 +1241,69 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer):
             logger.debug(f"Error building import mapping: {e}")
 
         return import_mapping
+
+    def _query_method_invocations(self, method_node):
+        call_query = Query(self.language, """
+            [
+              (method_invocation
+                object: (_) @object
+                name: (identifier) @method_name
+                arguments: (argument_list)? @arguments
+              ) @call
+    
+              (method_invocation
+                name: (identifier) @method_name
+                arguments: (argument_list)? @arguments
+              ) @call
+            ]
+            """)
+
+        return QueryCursor(call_query).captures(method_node)
+
+    def _process_method_call_captures(self, captures: dict, file_path: str, content: str) -> List[MethodCall]:
+        method_calls = []
+        call_nodes = captures.get("call", [])
+        object_nodes = captures.get("object", [])
+        method_nodes = captures.get("method_name", [])
+        args_nodes = captures.get("arguments", [])
+
+        for i, call_node in enumerate(call_nodes):
+            method_call = self._process_single_method_call(i, object_nodes, method_nodes, args_nodes, file_path, content)
+            if method_call:
+                method_calls.append(method_call)
+
+        return method_calls
+
+
+
+    def _process_single_method_call(self, index: int, object_nodes: list, method_nodes: list, args_nodes: list,
+                                    file_path: str, content: str) -> Optional[MethodCall]:
+        object_node = object_nodes[index] if index < len(object_nodes) else None
+        object_name = extract_content(object_node, content) if object_node else None
+
+        if object_name and object_name in JavaBuiltinPackages.JAVA_PRIMITIVES:
+            return None
+        name_node = method_nodes[index] if index < len(method_nodes) else None
+        method_name = extract_content(name_node, content)
+        if method_name and method_name not in self.methods_cache:
+            logger.info(f"Method {method_name} not in methods cache")
+            return None
+        try:
+            args_node = args_nodes[index] if index < len(args_nodes) else None
+
+            resolved = self._resolve_method_call(name_node, args_node, file_path, content)
+            if resolved and object_name and hasattr(resolved, "object_name"):
+                resolved.object_name = object_name
+
+            return resolved
+        except Exception:
+            return None
+
+
+    def _is_valid_method_call(self, method_name: str) -> bool:
+        if not method_name:
+            return False
+        if method_name not in self.methods_cache:
+            logger.info(f"Method {method_name} not in methods cache")
+            return False
+        return True

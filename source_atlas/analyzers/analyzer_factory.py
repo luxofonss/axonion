@@ -2,6 +2,7 @@ from source_atlas.analyzers.java_analyzer import JavaCodeAnalyzer
 
 from loguru import logger
 
+
 class AnalyzerFactory:
 
     @staticmethod
