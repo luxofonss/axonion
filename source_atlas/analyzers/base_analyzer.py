@@ -10,7 +10,7 @@ from tree_sitter import Language, Parser, Node
 from source_atlas.lsp.lsp_service import LSPService
 from source_atlas.models.domain_models import CodeChunk, ChunkType
 from source_atlas.models.domain_models import Method
-from source_atlas.utils.common import convert
+from util.common import convert
 
 
 @dataclass

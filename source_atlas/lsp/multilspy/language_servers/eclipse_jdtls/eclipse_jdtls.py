@@ -113,15 +113,22 @@ class EclipseJDTLS(LanguageServer):
                 "-Djava.import.generatesMetadataFilesAtProjectRoot=false",
                 "-Dfile.encoding=utf8",
                 "-noverify",
-                "-XX:+UseParallelGC",
-                "-XX:GCTimeRatio=4",
-                "-XX:AdaptiveSizePolicyWeight=90",
+                "-XX:+UseShenandoahGC",  # Low-pause GC cho indexing
+                "-XX:ShenandoahGCHeuristics=adaptive",
+                "-XX:+UseStringDeduplication",
+                "-XX:+AlwaysPreTouch",
+                "-XX:MetaspaceSize=256m",
+                "-XX:MaxMetaspaceSize=1G",
+                "-XX:ReservedCodeCacheSize=512m",
                 "-Dsun.zip.disableMemoryMapping=true",
                 "-Djava.lsp.joinOnCompletion=true",
-                "-Xmx3G",
-                "-Xms100m",
+                "-Djava.jdt.ls.javac.enabled=on",  # Javac cho faster parsing/indexing
+                "-Dorg.eclipse.jdt.core.index.enabled=true",
+                "-Dorg.eclipse.jdt.ls.core.indexerThreads=4",  # Parallel indexing
+                "-Xmx4G",  # Tăng cho large projects
+                "-Xms256m",
                 "-Xlog:disable",
-                "-Dlog.level=ALL",
+                "-Dlog.level=ERROR",  # Giảm logging
                 f"-javaagent:{lombok_jar_path}",
                 f"-Djdt.core.sharedIndexLocation={shared_cache_location}",
                 "-jar",

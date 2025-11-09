@@ -3,7 +3,7 @@ import re
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 from loguru import logger
 from tree_sitter import Language, Parser, Node, Query, QueryCursor
@@ -15,6 +15,7 @@ from source_atlas.lsp.implements.java_lsp import JavaLSPService
 from source_atlas.models.domain_models import Method, MethodCall, ChunkType
 from source_atlas.utils.comment_remover import JavaCommentRemover
 from source_atlas.utils.tree_sitter_helper import extract_content
+from util.common import normalize_whitespace
 
 
 class JavaBuiltinPackages:
@@ -350,7 +351,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
         try:
             query = Query(self.language, """
                 (modifiers (annotation) @annotation)
-                (modifiers (maker_annotation) @annotation)
+                (modifiers (marker_annotation) @annotation)
             """)
 
             captures = QueryCursor(query).captures(node)
@@ -464,7 +465,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
 
         for child in class_node.children:
             if child.type == 'identifier':
-                method_name = extract_content(child, content)
+                method_name = normalize_whitespace(extract_content(child, content))
                 method_name_node = child
             elif child.type == 'formal_parameters':
                 method_params = extract_content(child, content)
@@ -475,6 +476,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
             return None, None
 
         method_signature = f"{method_name}{method_params or '()'}"
+        method_signature = normalize_whitespace(method_signature)
         return method_signature, method_name_node
 
     def _extract_all_method_names_from_class(self, class_node: Node, content: str, full_class_name: str) -> List[str]:
@@ -592,20 +594,6 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
             logger.debug(f"LSP resolution failed: {e}")
             return []
 
-    def _resolve_type_with_lsp(self, node: Node, file_path: str) -> Optional[str]:
-        if not self.lsp_service:
-            return node.text.decode('utf8')
-
-        try:
-            line = node.start_point[0]
-            col = node.start_point[1]
-            lsp_results = self.lsp_service.request_definition(file_path, line, col)
-            return self._resolve_lsp_type_response(lsp_results)
-
-        except Exception as e:
-            logger.debug(f"LSP resolution failed: {e}")
-            return node.text.decode('utf8')
-
     def _resolve_lsp_implements(self, lsp_results) -> List[str]:
         if not lsp_results:
             return []
@@ -677,7 +665,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
             return method_name
 
         except Exception as e:
-            logger.debug(f"Error extracting method from source_atlas.lsp result: {e}")
+            logger.debug(f" Error extracting method from source_atlas.lsp result: {e}")
             return None
 
     def _is_lombok_generated_position(self, root_node: Node, target_line: int, content: str) -> bool:
@@ -928,6 +916,8 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
                 }:
                     for node in nodes:
                         text = extract_content(node, content)
+                        if text in JavaBuiltinPackages.JAVA_PRIMITIVES:
+                            continue
                         variable_ref = import_mapping.get(text, self._resolve_used_type_with_lsp(node, file_path, text))
                         if variable_ref:
                             used_types.add(variable_ref)
@@ -955,9 +945,11 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
 
             # args_val = extract_content(args, Path(file_path).read_text())
             lsp_result = self.lsp_service.request_definition(file_path, node.start_point[0], node.start_point[1])
+            if not lsp_result or len(lsp_result) == 0:
+                return None
+
             full_method_def = self._build_method_definition(lsp_result[0])
-
-
+            return MethodCall(name=full_method_def, params=[]) if full_method_def else None
 
         except Exception as e:
             logger.debug(f"LSP method call resolution failed: {e}")
@@ -981,7 +973,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
             return None
 
         if self._has_multiple_classes(raw_absolute_path):
-            absolute_path = self._resolve_class_pay_with_hover(result, raw_absolute_path)
+            absolute_path = self._resolve_class_path_with_hover(result, raw_absolute_path)
             if not absolute_path:
                 return None
 
@@ -1116,6 +1108,9 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
                 if capture_name in {"field_type", "generic_type"}:
                     for node in nodes:
                         type_text = extract_content(node, content)
+                        logger.info(f"type_text {type_text}")
+                        if type_text in JavaBuiltinPackages.JAVA_PRIMITIVES:
+                            continue
                         resolved_type = self._resolve_used_type_with_lsp(node, file_path, type_text)
                         if resolved_type:
                             used_types.add(resolved_type)
@@ -1284,7 +1279,7 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
         if object_name and object_name in JavaBuiltinPackages.JAVA_PRIMITIVES:
             return None
         name_node = method_nodes[index] if index < len(method_nodes) else None
-        method_name = extract_content(name_node, content)
+        method_name = normalize_whitespace(extract_content(name_node, content))
         if method_name and method_name not in self.methods_cache:
             logger.info(f"Method {method_name} not in methods cache")
             return None
