@@ -1108,7 +1108,6 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
                 if capture_name in {"field_type", "generic_type"}:
                     for node in nodes:
                         type_text = extract_content(node, content)
-                        logger.info(f"type_text {type_text}")
                         if type_text in JavaBuiltinPackages.JAVA_PRIMITIVES:
                             continue
                         resolved_type = self._resolve_used_type_with_lsp(node, file_path, type_text)
@@ -1293,12 +1292,3 @@ class JavaCodeAnalyzer(BaseCodeAnalyzer, ABC):
             return resolved
         except Exception:
             return None
-
-
-    def _is_valid_method_call(self, method_name: str) -> bool:
-        if not method_name:
-            return False
-        if method_name not in self.methods_cache:
-            logger.info(f"Method {method_name} not in methods cache")
-            return False
-        return True

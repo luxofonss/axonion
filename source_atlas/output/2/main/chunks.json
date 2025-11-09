@@ -5,13 +5,13 @@
     "full_class_name": "com.example.demo.DemoBackendApplication",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\DemoBackendApplication.java",
     "content": "@SpringBootApplication\npublic class DemoBackendApplication {\n\n    public static void main(String[] args) {\n        SpringApplication.run(DemoBackendApplication.class, args);\n    }\n\n}",
-    "ast_hash": "46a13018b7f8c762c25458a9e99f6714",
+    "ast_hash": "8e8f1eb1cc9fa0deda60ef32841a7925e89e9b7f27aabb3185b581e0d457bb48",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.DemoBackendApplication.main(String[] args)",
         "body": "public static void main(String[] args) {\n        SpringApplication.run(DemoBackendApplication.class, args);\n    }",
-        "ast_hash": "10573668856ecefff11b28f1f8b62e97",
+        "ast_hash": "66994b5b19c0dbab738912ba04243374baee2afc6cdd0f1999b73a2d1305702c",
         "method_calls": [],
         "used_types": [],
         "field_access": [],
@@ -27,8 +27,9 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
-    "type": "configuration"
+    "type": "regular"
   },
   {
     "package": "com.example.demo.config",
@@ -36,19 +37,14 @@
     "full_class_name": "com.example.demo.config.DataInitializer",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\config\\DataInitializer.java",
     "content": "@Component\npublic class DataInitializer implements CommandLineRunner {\n    \n    @Autowired\n    private UserRepository userRepository;\n    \n    @Override\n    public void run(String... args) throws Exception {\n        \n        if (!userRepository.existsByUsername(\"testuser\")) {\n            User user = new User(\"testuser\", \"test@example.com\", \"password123\");\n            userRepository.save(user);\n            System.out.println(\"Default user created: testuser\");\n        }\n    }\n}",
-    "ast_hash": "a9ff2a27f35162db9f39393c8c18a723",
+    "ast_hash": "be872509c8827085031afe0618bee34fa845b064ac2bcb9d95da1213f9970e2b",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.config.DataInitializer.run(String... args)",
         "body": "@Override\n    public void run(String... args) throws Exception {\n        \n        if (!userRepository.existsByUsername(\"testuser\")) {\n            User user = new User(\"testuser\", \"test@example.com\", \"password123\");\n            userRepository.save(user);\n            System.out.println(\"Default user created: testuser\");\n        }\n    }",
-        "ast_hash": "139fa61fa738e9b25243e821fc28334c",
-        "method_calls": [
-          {
-            "name": "com.example.demo.repository.UserRepository.existsByUsername(String username)",
-            "params": []
-          }
-        ],
+        "ast_hash": "1fa08dd149d10a212cb0650c0ce0b27fb049582fad9f5411ebd43085846e6225",
+        "method_calls": [],
         "used_types": [
           "com.example.demo.entity.User"
         ],
@@ -67,6 +63,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -76,28 +73,23 @@
     "full_class_name": "com.example.demo.controller.QuestionController",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\controller\\QuestionController.java",
     "content": "@RestController\n@RequestMapping(\"/api/questions\")\n@CrossOrigin(origins = \"*\")\npublic class QuestionController {\n    \n    @Autowired\n    private QuestionService questionService;\n    \n    @PostMapping\n    public ResponseEntity<?> createQuestion(\n            @Valid @RequestBody CreateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult) {\n        \n        try {\n            \n            if (bindingResult.hasErrors()) {\n                String errorMessage = bindingResult.getFieldErrors().stream()\n                    .map(error -> error.getField() + \": \" + error.getDefaultMessage())\n                    .collect(Collectors.joining(\", \"));\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(errorMessage, HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            QuestionResponse response = questionService.createQuestion(request, userId);\n            return ResponseEntity.status(HttpStatus.CREATED).body(response);\n            \n        } catch (IllegalArgumentException e) {\n            return ResponseEntity.badRequest()\n                .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value()));\n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n    \n    @GetMapping\n    public ResponseEntity<?> getUserQuestions(\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            List<QuestionResponse> questions = questionService.getUserQuestions(userId);\n            return ResponseEntity.ok(questions);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n    \n    @GetMapping(\"/{questionId}\")\n    public ResponseEntity<?> getQuestionById(\n            @PathVariable Long questionId,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            QuestionResponse question = questionService.getQuestionById(questionId, userId);\n            return ResponseEntity.ok(question);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }\n}",
-    "ast_hash": "d21b58b7d23c4cc0be2b0a6ff3d2c0e6",
+    "ast_hash": "a7a1c0d1b6b23ec3a034a47b9ff0353d2dde1398b76726f5bbdbe43587afc3f2",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.controller.QuestionController.createQuestion(\n            @Valid @RequestBody CreateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult)",
         "body": "@PostMapping\n    public ResponseEntity<?> createQuestion(\n            @Valid @RequestBody CreateQuestionRequest request,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId,\n            BindingResult bindingResult) {\n        \n        try {\n            \n            if (bindingResult.hasErrors()) {\n                String errorMessage = bindingResult.getFieldErrors().stream()\n                    .map(error -> error.getField() + \": \" + error.getDefaultMessage())\n                    .collect(Collectors.joining(\", \"));\n                return ResponseEntity.badRequest()\n                    .body(new ErrorResponse(errorMessage, HttpStatus.BAD_REQUEST.value()));\n            }\n            \n            QuestionResponse response = questionService.createQuestion(request, userId);\n            return ResponseEntity.status(HttpStatus.CREATED).body(response);\n            \n        } catch (IllegalArgumentException e) {\n            return ResponseEntity.badRequest()\n                .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value()));\n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
-        "ast_hash": "fc336e5f4a66d6f239c5ff21577f894d",
-        "method_calls": [
-          {
-            "name": "com.example.demo.service.QuestionService.createQuestion(CreateQuestionRequest request, Long userId)",
-            "params": []
-          }
-        ],
+        "ast_hash": "0378ed536b08e22969140974921b2f26c7666d7fb6996f0eb5d76aef1e2ffb5b",
+        "method_calls": [],
         "used_types": [
           "com.example.demo.dto.CreateQuestionRequest",
           "com.example.demo.dto.QuestionResponse"
         ],
         "field_access": [
-          "INTERNAL_SERVER_ERROR",
           "BAD_REQUEST",
+          "CREATED",
           "UNAUTHORIZED",
-          "CREATED"
+          "INTERNAL_SERVER_ERROR"
         ],
         "inheritance_info": [],
         "endpoint": [
@@ -115,13 +107,8 @@
       {
         "name": "com.example.demo.controller.QuestionController.getUserQuestions(\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId)",
         "body": "@GetMapping\n    public ResponseEntity<?> getUserQuestions(\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            List<QuestionResponse> questions = questionService.getUserQuestions(userId);\n            return ResponseEntity.ok(questions);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
-        "ast_hash": "093ead8152de9e820bb86213025a1ac9",
-        "method_calls": [
-          {
-            "name": "com.example.demo.service.QuestionService.getUserQuestions(Long userId)",
-            "params": []
-          }
-        ],
+        "ast_hash": "8690f4b817032dd5829ef95fb9ddc987e2934fc6d6c50ca5e05e44334c6f43ef",
+        "method_calls": [],
         "used_types": [
           "com.example.demo.dto.QuestionResponse"
         ],
@@ -145,13 +132,8 @@
       {
         "name": "com.example.demo.controller.QuestionController.getQuestionById(\n            @PathVariable Long questionId,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId)",
         "body": "@GetMapping(\"/{questionId}\")\n    public ResponseEntity<?> getQuestionById(\n            @PathVariable Long questionId,\n            @RequestHeader(value = \"User-Id\", defaultValue = \"1\") Long userId) {\n        \n        try {\n            QuestionResponse question = questionService.getQuestionById(questionId, userId);\n            return ResponseEntity.ok(question);\n            \n        } catch (RuntimeException e) {\n            if (e.getMessage().contains(\"not found\") || e.getMessage().contains(\"access denied\")) {\n                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)\n                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED.value()));\n            }\n            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)\n                .body(new ErrorResponse(\"Internal server error\", HttpStatus.INTERNAL_SERVER_ERROR.value()));\n        }\n    }",
-        "ast_hash": "0caa7ff43901496dbdd628cd80534a8e",
-        "method_calls": [
-          {
-            "name": "com.example.demo.service.QuestionService.getQuestionById(Long questionId, Long userId)",
-            "params": []
-          }
-        ],
+        "ast_hash": "e479933b0729076fb7f24e5739fbd0adc13bfcd42d6b97ad55488da2a9ab4f38",
+        "method_calls": [],
         "used_types": [
           "com.example.demo.dto.QuestionResponse"
         ],
@@ -178,6 +160,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -187,7 +170,7 @@
     "full_class_name": "com.example.demo.dto.CreateQuestionRequest",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\dto\\CreateQuestionRequest.java",
     "content": "@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class CreateQuestionRequest {\n    \n    @NotBlank(message = \"Question text is required\")\n    private String questionText;\n    \n    @NotBlank(message = \"Question type is required\")\n    @Pattern(regexp = \"multiple_choice|pronunciation|fill_in_the_blank\", \n             message = \"Question type must be one of: multiple_choice, pronunciation, fill_in_the_blank\")\n    private String questionType;\n    \n    @Valid\n    private List<QuestionOptionDto> options;\n    \n    private String correctAnswer;\n    \n    private String explanation;\n    \n    private List<String> tags;\n    \n    @Pattern(regexp = \"easy|medium|hard\", \n             message = \"Difficulty must be one of: easy, medium, hard\")\n    private String difficulty;\n    \n    private Long quizId;\n}",
-    "ast_hash": "f039264500950e96e8f70c560a50d54c",
+    "ast_hash": "8e2c93ca45ca86c3240812c46a4c8239fc6868ab6cdb10bfc2ad415df198b2ac",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -195,6 +178,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -204,7 +188,7 @@
     "full_class_name": "com.example.demo.dto.ErrorResponse",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\dto\\ErrorResponse.java",
     "content": "@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class ErrorResponse {\n    \n    private String message;\n    private int status;\n    private LocalDateTime timestamp;\n    \n    \n    public ErrorResponse(String message, int status) {\n        this.message = message;\n        this.status = status;\n        this.timestamp = LocalDateTime.now();\n    }\n}",
-    "ast_hash": "ac71240eb610b889942b6b362626c711",
+    "ast_hash": "acdfe3b32f7bb352617afe73d4c03f7ac01693b0fb5da24f39c691bb6a2ea6ab",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -212,6 +196,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -221,7 +206,7 @@
     "full_class_name": "com.example.demo.dto.QuestionOptionDto",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\dto\\QuestionOptionDto.java",
     "content": "@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class QuestionOptionDto {\n    \n    @NotBlank(message = \"Option text is required\")\n    private String optionText;\n    \n    @NotNull(message = \"Is correct flag is required\")\n    private Boolean isCorrect;\n}",
-    "ast_hash": "49939d8fca13a464fd1db313e52d602c",
+    "ast_hash": "20fd2bf330c154f6c5cad5d3ce0d1d6c11d055085b63d4f59cad7cd77a1c4c1f",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -229,6 +214,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -238,7 +224,7 @@
     "full_class_name": "com.example.demo.dto.QuestionResponse",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\dto\\QuestionResponse.java",
     "content": "@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class QuestionResponse {\n    \n    private String questionId;\n    private String questionText;\n    private String questionType;\n    private List<QuestionOptionDto> options;\n    private String correctAnswer;\n    private String explanation;\n    private List<String> tags;\n    private String difficulty;\n    private LocalDateTime createdAt;\n}",
-    "ast_hash": "e41c043351346e2fe81eea36bdc21d7d",
+    "ast_hash": "fe36a4a9ad42bfff115c26e78dec1fb053eedbd22abb48e40364c9c0b4d54d5e",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -246,6 +232,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -255,13 +242,13 @@
     "full_class_name": "com.example.demo.entity.Question",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\entity\\Question.java",
     "content": "@Entity\n@Table(name = \"questions\")\n@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class Question {\n    \n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n    \n    @Column(nullable = false, columnDefinition = \"TEXT\")\n    private String questionText;\n    \n    @Enumerated(EnumType.STRING)\n    @Column(nullable = false)\n    private QuestionType questionType;\n    \n    @Column(columnDefinition = \"TEXT\")\n    private String correctAnswer;\n    \n    @Column(columnDefinition = \"TEXT\")\n    private String explanation;\n    \n    @Enumerated(EnumType.STRING)\n    private Difficulty difficulty;\n    \n    @ElementCollection\n    @CollectionTable(name = \"question_tags\", joinColumns = @JoinColumn(name = \"question_id\"))\n    @Column(name = \"tag\")\n    private List<String> tags;\n    \n    @ManyToOne(fetch = FetchType.LAZY)\n    @JoinColumn(name = \"user_id\", nullable = false)\n    private User user;\n    \n    @ManyToOne(fetch = FetchType.LAZY)\n    @JoinColumn(name = \"quiz_id\")\n    private Quiz quiz;\n    \n    @OneToMany(mappedBy = \"question\", cascade = CascadeType.ALL, fetch = FetchType.LAZY)\n    private List<QuestionOption> options;\n    \n    @Column(name = \"created_at\")\n    private LocalDateTime createdAt;\n    \n    @Column(name = \"updated_at\")\n    private LocalDateTime updatedAt;\n    \n    \n    public enum QuestionType {\n        MULTIPLE_CHOICE(\"multiple_choice\"),\n        PRONUNCIATION(\"pronunciation\"),\n        FILL_IN_THE_BLANK(\"fill_in_the_blank\");\n        \n        private final String value;\n        \n        QuestionType(String value) {\n            this.value = value;\n        }\n        \n        public String getValue() {\n            return value;\n        }\n        \n        public static QuestionType fromValue(String value) {\n            for (QuestionType type : QuestionType.values()) {\n                if (type.value.equals(value)) {\n                    return type;\n                }\n            }\n            throw new IllegalArgumentException(\"Invalid question type: \" + value);\n        }\n    }\n    \n    public enum Difficulty {\n        EASY(\"easy\"),\n        MEDIUM(\"medium\"),\n        HARD(\"hard\");\n        \n        private final String value;\n        \n        Difficulty(String value) {\n            this.value = value;\n        }\n        \n        public String getValue() {\n            return value;\n        }\n        \n        public static Difficulty fromValue(String value) {\n            if (value == null) return null;\n            for (Difficulty difficulty : Difficulty.values()) {\n                if (difficulty.value.equals(value)) {\n                    return difficulty;\n                }\n            }\n            throw new IllegalArgumentException(\"Invalid difficulty: \" + value);\n        }\n    }\n    \n    \n    public Question(String questionText, QuestionType questionType, User user) {\n        this.questionText = questionText;\n        this.questionType = questionType;\n        this.user = user;\n        this.createdAt = LocalDateTime.now();\n        this.updatedAt = LocalDateTime.now();\n    }\n    \n    @PrePersist\n    public void prePersist() {\n        if (this.createdAt == null) {\n            this.createdAt = LocalDateTime.now();\n        }\n        if (this.updatedAt == null) {\n            this.updatedAt = LocalDateTime.now();\n        }\n    }\n    \n    @PreUpdate\n    public void preUpdate() {\n        this.updatedAt = LocalDateTime.now();\n    }\n}",
-    "ast_hash": "4ecc67e3ab87fe7e97e297f326d61139",
+    "ast_hash": "a6b9218fe51da9b51fa386d597aac8ff3f5828f0ee257134bc24fe544b0b8c1f",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.entity.Question.prePersist()",
         "body": "@PrePersist\n    public void prePersist() {\n        if (this.createdAt == null) {\n            this.createdAt = LocalDateTime.now();\n        }\n        if (this.updatedAt == null) {\n            this.updatedAt = LocalDateTime.now();\n        }\n    }",
-        "ast_hash": "fe5792f4249a593ef5260d0d827c7b65",
+        "ast_hash": "95a495f79fa5f55a75a4a44ce56dcd637293afa73e089f9ddee490908c9fd2dd",
         "method_calls": [],
         "used_types": [],
         "field_access": [
@@ -277,7 +264,7 @@
       {
         "name": "com.example.demo.entity.Question.preUpdate()",
         "body": "@PreUpdate\n    public void preUpdate() {\n        this.updatedAt = LocalDateTime.now();\n    }",
-        "ast_hash": "55fcbc673c08305e14d025b45948f18d",
+        "ast_hash": "843028ba5a28cac09bed6669fe686d4e9c1d2601059ac1dc991867598d3a567a",
         "method_calls": [],
         "used_types": [],
         "field_access": [
@@ -295,6 +282,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -304,7 +292,7 @@
     "full_class_name": "com.example.demo.entity.Question.QuestionType",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\entity\\Question.java",
     "content": "public enum QuestionType {\n        MULTIPLE_CHOICE(\"multiple_choice\"),\n        PRONUNCIATION(\"pronunciation\"),\n        FILL_IN_THE_BLANK(\"fill_in_the_blank\");\n        \n        private final String value;\n        \n        QuestionType(String value) {\n            this.value = value;\n        }\n        \n        public String getValue() {\n            return value;\n        }\n        \n        public static QuestionType fromValue(String value) {\n            for (QuestionType type : QuestionType.values()) {\n                if (type.value.equals(value)) {\n                    return type;\n                }\n            }\n            throw new IllegalArgumentException(\"Invalid question type: \" + value);\n        }\n    }",
-    "ast_hash": "985b74f501b6633e3d328bacaebfe8c4",
+    "ast_hash": "8d6aedf73d383f257b22a834e7da8d8288e592753f98a866297c781cd8a72ba9",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -312,6 +300,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": true,
     "type": "regular"
   },
@@ -321,7 +310,7 @@
     "full_class_name": "com.example.demo.entity.Question.Difficulty",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\entity\\Question.java",
     "content": "public enum Difficulty {\n        EASY(\"easy\"),\n        MEDIUM(\"medium\"),\n        HARD(\"hard\");\n        \n        private final String value;\n        \n        Difficulty(String value) {\n            this.value = value;\n        }\n        \n        public String getValue() {\n            return value;\n        }\n        \n        public static Difficulty fromValue(String value) {\n            if (value == null) return null;\n            for (Difficulty difficulty : Difficulty.values()) {\n                if (difficulty.value.equals(value)) {\n                    return difficulty;\n                }\n            }\n            throw new IllegalArgumentException(\"Invalid difficulty: \" + value);\n        }\n    }",
-    "ast_hash": "cb71820af6a5a31fe0240463cc7982f0",
+    "ast_hash": "e27f51a5b8a4cc46c3d8d515e3dc624d5913b1e0e9fce14cffecfdcc235061f3",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -329,6 +318,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": true,
     "type": "regular"
   },
@@ -338,7 +328,7 @@
     "full_class_name": "com.example.demo.entity.QuestionOption",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\entity\\QuestionOption.java",
     "content": "@Entity\n@Table(name = \"question_options\")\n@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class QuestionOption {\n    \n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n    \n    @Column(nullable = false, columnDefinition = \"TEXT\")\n    private String optionText;\n    \n    @Column(nullable = false)\n    private Boolean isCorrect;\n    \n    @ManyToOne(fetch = FetchType.LAZY)\n    @JoinColumn(name = \"question_id\", nullable = false)\n    private Question question;\n    \n    \n    public QuestionOption(String optionText, Boolean isCorrect, Question question) {\n        this.optionText = optionText;\n        this.isCorrect = isCorrect;\n        this.question = question;\n    }\n}",
-    "ast_hash": "9d6a9e9ed5fbdc13d010f3cb1c504f0b",
+    "ast_hash": "4247f1def1fe7eac694dc546a496e5d29d6ed6722bd9359e7e264f2b9ee96212",
     "implements": [],
     "methods": [],
     "parent_class": [
@@ -346,6 +336,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -355,13 +346,13 @@
     "full_class_name": "com.example.demo.entity.Quiz",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\entity\\Quiz.java",
     "content": "@Entity\n@Table(name = \"quizzes\")\n@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class Quiz {\n    \n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n    \n    @Column(nullable = false)\n    private String title;\n    \n    @Column(columnDefinition = \"TEXT\")\n    private String description;\n    \n    @ManyToOne(fetch = FetchType.LAZY)\n    @JoinColumn(name = \"user_id\", nullable = false)\n    private User user;\n    \n    @OneToMany(mappedBy = \"quiz\", cascade = CascadeType.ALL, fetch = FetchType.LAZY)\n    private List<Question> questions;\n    \n    @Column(name = \"created_at\")\n    private LocalDateTime createdAt;\n    \n    @Column(name = \"updated_at\")\n    private LocalDateTime updatedAt;\n    \n    \n    public Quiz(String title, String description, User user) {\n        this.title = title;\n        this.description = description;\n        this.user = user;\n        this.createdAt = LocalDateTime.now();\n        this.updatedAt = LocalDateTime.now();\n    }\n    \n    @PrePersist\n    public void prePersist() {\n        if (this.createdAt == null) {\n            this.createdAt = LocalDateTime.now();\n        }\n        if (this.updatedAt == null) {\n            this.updatedAt = LocalDateTime.now();\n        }\n    }\n    \n    @PreUpdate\n    public void preUpdate() {\n        this.updatedAt = LocalDateTime.now();\n    }\n}",
-    "ast_hash": "9cdded91aec95fa185ebce1dd2e095f0",
+    "ast_hash": "637f7285ba2de8d49b334b277bf7dcf74c9d1bcea81ce6dd2e79ec00258b363a",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.entity.Quiz.prePersist()",
         "body": "@PrePersist\n    public void prePersist() {\n        if (this.createdAt == null) {\n            this.createdAt = LocalDateTime.now();\n        }\n        if (this.updatedAt == null) {\n            this.updatedAt = LocalDateTime.now();\n        }\n    }",
-        "ast_hash": "fe5792f4249a593ef5260d0d827c7b65",
+        "ast_hash": "95a495f79fa5f55a75a4a44ce56dcd637293afa73e089f9ddee490908c9fd2dd",
         "method_calls": [],
         "used_types": [],
         "field_access": [
@@ -377,7 +368,7 @@
       {
         "name": "com.example.demo.entity.Quiz.preUpdate()",
         "body": "@PreUpdate\n    public void preUpdate() {\n        this.updatedAt = LocalDateTime.now();\n    }",
-        "ast_hash": "55fcbc673c08305e14d025b45948f18d",
+        "ast_hash": "843028ba5a28cac09bed6669fe686d4e9c1d2601059ac1dc991867598d3a567a",
         "method_calls": [],
         "used_types": [],
         "field_access": [
@@ -395,6 +386,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -404,13 +396,13 @@
     "full_class_name": "com.example.demo.entity.User",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\entity\\User.java",
     "content": "@Entity\n@Table(name = \"users\")\n@Data\n@NoArgsConstructor\n@AllArgsConstructor\npublic class User {\n    \n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n    \n    @Column(nullable = false, unique = true)\n    private String username;\n    \n    @Column(nullable = false, unique = true)\n    private String email;\n    \n    @Column(nullable = false)\n    private String password;\n    \n    @Column(name = \"created_at\")\n    private LocalDateTime createdAt;\n    \n    @OneToMany(mappedBy = \"user\", cascade = CascadeType.ALL, fetch = FetchType.LAZY)\n    private List<Quiz> quizzes;\n    \n    @OneToMany(mappedBy = \"user\", cascade = CascadeType.ALL, fetch = FetchType.LAZY)\n    private List<Question> questions;\n    \n    \n    public User(String username, String email, String password) {\n        this.username = username;\n        this.email = email;\n        this.password = password;\n        this.createdAt = LocalDateTime.now();\n    }\n    \n    @PrePersist\n    public void prePersist() {\n        if (this.createdAt == null) {\n            this.createdAt = LocalDateTime.now();\n        }\n    }\n}",
-    "ast_hash": "1251a07aab7d41553914d9b4d3f987bd",
+    "ast_hash": "e2ce993914731611c09146847b83c688498a6c83b1b80852ae923752120225f5",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.entity.User.prePersist()",
         "body": "@PrePersist\n    public void prePersist() {\n        if (this.createdAt == null) {\n            this.createdAt = LocalDateTime.now();\n        }\n    }",
-        "ast_hash": "18842c062b6d9a1cd2afea17f2e6b153",
+        "ast_hash": "11c4368768815e18dcf692b5f4af16b136e550d6e5d829f88d322485acb90f96",
         "method_calls": [],
         "used_types": [],
         "field_access": [
@@ -428,6 +420,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -437,17 +430,17 @@
     "full_class_name": "com.example.demo.repository.QuestionOptionRepository",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\repository\\QuestionOptionRepository.java",
     "content": "@Repository\npublic interface QuestionOptionRepository extends JpaRepository<QuestionOption, Long> {\n    \n    List<QuestionOption> findByQuestion(Question question);\n    \n    List<QuestionOption> findByQuestionId(Long questionId);\n    \n    List<QuestionOption> findByQuestionAndIsCorrect(Question question, Boolean isCorrect);\n}",
-    "ast_hash": "9f3f7092a121432372ea413c573bacc2",
+    "ast_hash": "22859051d185b2012faf5330ed3b7a4ffca9d238976c1577d2d0cb293f2f7d20",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.repository.QuestionOptionRepository.findByQuestion(Question question)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Question",
-          "com.example.demo.entity.QuestionOption"
+          "com.example.demo.entity.QuestionOption",
+          "com.example.demo.entity.Question"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -459,7 +452,7 @@
       {
         "name": "com.example.demo.repository.QuestionOptionRepository.findByQuestionId(Long questionId)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.QuestionOption"
@@ -474,11 +467,11 @@
       {
         "name": "com.example.demo.repository.QuestionOptionRepository.findByQuestionAndIsCorrect(Question question, Boolean isCorrect)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Question",
-          "com.example.demo.entity.QuestionOption"
+          "com.example.demo.entity.QuestionOption",
+          "com.example.demo.entity.Question"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -493,6 +486,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -502,13 +496,13 @@
     "full_class_name": "com.example.demo.repository.QuestionRepository",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\repository\\QuestionRepository.java",
     "content": "@Repository\npublic interface QuestionRepository extends JpaRepository<Question, Long> {\n    \n    List<Question> findByUser(User user);\n    \n    List<Question> findByUserId(Long userId);\n    \n    List<Question> findByQuiz(Quiz quiz);\n    \n    List<Question> findByQuizId(Long quizId);\n    \n    Optional<Question> findByIdAndUser(Long id, User user);\n    \n    @Query(\"SELECT q FROM Question q WHERE q.user.id = :userId AND (:tag IS NULL OR :tag MEMBER OF q.tags)\")\n    List<Question> findByUserIdAndTag(@Param(\"userId\") Long userId, @Param(\"tag\") String tag);\n    \n    @Query(\"SELECT q FROM Question q WHERE q.user.id = :userId AND q.difficulty = :difficulty\")\n    List<Question> findByUserIdAndDifficulty(@Param(\"userId\") Long userId, @Param(\"difficulty\") Question.Difficulty difficulty);\n}",
-    "ast_hash": "542617ec19b47c5da031f984fca6a03a",
+    "ast_hash": "7f3ff75e84efa4b0f35db6fe5169be8301ef210989e9426de0627fc69a6cc4a3",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.repository.QuestionRepository.findByUser(User user)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Question",
@@ -524,7 +518,7 @@
       {
         "name": "com.example.demo.repository.QuestionRepository.findByUserId(Long userId)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Question"
@@ -539,7 +533,7 @@
       {
         "name": "com.example.demo.repository.QuestionRepository.findByQuiz(Quiz quiz)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Question",
@@ -555,7 +549,7 @@
       {
         "name": "com.example.demo.repository.QuestionRepository.findByQuizId(Long quizId)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Question"
@@ -570,7 +564,7 @@
       {
         "name": "com.example.demo.repository.QuestionRepository.findByIdAndUser(Long id, User user)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Question",
@@ -586,7 +580,7 @@
       {
         "name": "com.example.demo.repository.QuestionRepository.findByUserIdAndTag(@Param(\"userId\") Long userId, @Param(\"tag\") String tag)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Question"
@@ -601,11 +595,10 @@
       {
         "name": "com.example.demo.repository.QuestionRepository.findByUserIdAndDifficulty(@Param(\"userId\") Long userId, @Param(\"difficulty\") Question.Difficulty difficulty)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Question",
-          "com.example.demo.entity.Question.Difficulty"
+          "com.example.demo.entity.Question"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -620,6 +613,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -629,17 +623,17 @@
     "full_class_name": "com.example.demo.repository.QuizRepository",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\repository\\QuizRepository.java",
     "content": "@Repository\npublic interface QuizRepository extends JpaRepository<Quiz, Long> {\n    \n    List<Quiz> findByUser(User user);\n    \n    List<Quiz> findByUserId(Long userId);\n    \n    Optional<Quiz> findByIdAndUser(Long id, User user);\n}",
-    "ast_hash": "9f3f7092a121432372ea413c573bacc2",
+    "ast_hash": "22859051d185b2012faf5330ed3b7a4ffca9d238976c1577d2d0cb293f2f7d20",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.repository.QuizRepository.findByUser(User user)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Quiz",
-          "com.example.demo.entity.User"
+          "com.example.demo.entity.User",
+          "com.example.demo.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -651,7 +645,7 @@
       {
         "name": "com.example.demo.repository.QuizRepository.findByUserId(Long userId)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.Quiz"
@@ -666,11 +660,11 @@
       {
         "name": "com.example.demo.repository.QuizRepository.findByIdAndUser(Long id, User user)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Quiz",
-          "com.example.demo.entity.User"
+          "com.example.demo.entity.User",
+          "com.example.demo.entity.Quiz"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -685,6 +679,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -694,13 +689,13 @@
     "full_class_name": "com.example.demo.repository.UserRepository",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\repository\\UserRepository.java",
     "content": "@Repository\npublic interface UserRepository extends JpaRepository<User, Long> {\n    \n    Optional<User> findByUsername(String username);\n    \n    Optional<User> findByEmail(String email);\n    \n    boolean existsByUsername(String username);\n    \n    boolean existsByEmail(String email);\n}",
-    "ast_hash": "8eb2f7a534a5b5d27618cb8460a79055",
+    "ast_hash": "f077dc2e5b93b321e2fe40ad94d1f2e704df9971ce93bf90dd85950408b55a45",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.repository.UserRepository.findByUsername(String username)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.User"
@@ -715,7 +710,7 @@
       {
         "name": "com.example.demo.repository.UserRepository.findByEmail(String email)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [
           "com.example.demo.entity.User"
@@ -730,7 +725,7 @@
       {
         "name": "com.example.demo.repository.UserRepository.existsByUsername(String username)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [],
         "field_access": [],
@@ -743,7 +738,7 @@
       {
         "name": "com.example.demo.repository.UserRepository.existsByEmail(String email)",
         "body": "",
-        "ast_hash": "a9c449d4fa44e9e5a41c574ae55ce4d9",
+        "ast_hash": "1310ca2c8932dbd118668bd97442558a3e1f546b5e15c69699dfbd6024f548d8",
         "method_calls": [],
         "used_types": [],
         "field_access": [],
@@ -759,6 +754,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -768,35 +764,17 @@
     "full_class_name": "com.example.demo.service.QuestionService",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\main\\java\\com\\example\\demo\\service\\QuestionService.java",
     "content": "@Service\n@Transactional\npublic class QuestionService {\n    \n    @Autowired\n    private QuestionRepository questionRepository;\n    \n    @Autowired\n    private UserRepository userRepository;\n    \n    @Autowired\n    private QuizRepository quizRepository;\n    \n    public QuestionResponse createQuestion(CreateQuestionRequest request, Long userId) {\n        \n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        \n        Quiz quiz = null;\n        if (request.getQuizId() != null) {\n            quiz = quizRepository.findByIdAndUser(request.getQuizId(), user)\n                .orElseThrow(() -> new RuntimeException(\"Quiz not found or access denied\"));\n        }\n        \n        \n        Question.QuestionType questionType = Question.QuestionType.fromValue(request.getQuestionType());\n        validateQuestionData(request, questionType);\n        \n        \n        Question question = new Question();\n        question.setQuestionText(request.getQuestionText());\n        question.setQuestionType(questionType);\n        question.setCorrectAnswer(request.getCorrectAnswer());\n        question.setExplanation(request.getExplanation());\n        question.setTags(request.getTags());\n        question.setUser(user);\n        question.setQuiz(quiz);\n        \n        if (request.getDifficulty() != null) {\n            question.setDifficulty(Question.Difficulty.fromValue(request.getDifficulty()));\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        \n        List<QuestionOption> options = new ArrayList<>();\n        if (request.getOptions() != null && !request.getOptions().isEmpty()) {\n            for (QuestionOptionDto optionDto : request.getOptions()) {\n                QuestionOption option = new QuestionOption();\n                option.setOptionText(optionDto.getOptionText());\n                option.setIsCorrect(optionDto.getIsCorrect());\n                option.setQuestion(question);\n                options.add(option);\n            }\n            question.setOptions(options);\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        return mapToResponse(question);\n    }\n    \n    public List<QuestionResponse> getUserQuestions(Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        List<Question> questions = questionRepository.findByUser(user);\n        return questions.stream()\n            .map(this::mapToResponse)\n            .collect(Collectors.toList());\n    }\n    \n    public QuestionResponse getQuestionById(Long questionId, Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        Question question = questionRepository.findByIdAndUser(questionId, user)\n            .orElseThrow(() -> new RuntimeException(\"Question not found or access denied\"));\n        \n        return mapToResponse(question);\n    }\n    \n    private void validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType) {\n        switch (questionType) {\n            case MULTIPLE_CHOICE:\n                if (request.getOptions() == null || request.getOptions().isEmpty()) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                }\n                \n                long correctCount = request.getOptions().stream()\n                    .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                    .sum();\n                \n                if (correctCount == 0) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (request.getCorrectAnswer() == null || request.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(questionType.getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }\n    \n    private QuestionResponse mapToResponse(Question question) {\n        List<QuestionOptionDto> optionDtos = null;\n        if (question.getOptions() != null && !question.getOptions().isEmpty()) {\n            optionDtos = question.getOptions().stream()\n                .map(option -> new QuestionOptionDto(option.getOptionText(), option.getIsCorrect()))\n                .collect(Collectors.toList());\n        }\n        \n        return new QuestionResponse(\n            question.getId().toString(),\n            question.getQuestionText(),\n            question.getQuestionType().getValue(),\n            optionDtos,\n            question.getCorrectAnswer(),\n            question.getExplanation(),\n            question.getTags(),\n            question.getDifficulty() != null ? question.getDifficulty().getValue() : null,\n            question.getCreatedAt()\n        );\n    }\n}",
-    "ast_hash": "7178dabd41d43b8512aaf6b4d8f1a639",
+    "ast_hash": "b273fbbe80b5675beb94a4bc84c3123a9a7c493037a27f574071d908089fb15e",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.service.QuestionService.createQuestion(CreateQuestionRequest request, Long userId)",
         "body": "public QuestionResponse createQuestion(CreateQuestionRequest request, Long userId) {\n        \n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        \n        Quiz quiz = null;\n        if (request.getQuizId() != null) {\n            quiz = quizRepository.findByIdAndUser(request.getQuizId(), user)\n                .orElseThrow(() -> new RuntimeException(\"Quiz not found or access denied\"));\n        }\n        \n        \n        Question.QuestionType questionType = Question.QuestionType.fromValue(request.getQuestionType());\n        validateQuestionData(request, questionType);\n        \n        \n        Question question = new Question();\n        question.setQuestionText(request.getQuestionText());\n        question.setQuestionType(questionType);\n        question.setCorrectAnswer(request.getCorrectAnswer());\n        question.setExplanation(request.getExplanation());\n        question.setTags(request.getTags());\n        question.setUser(user);\n        question.setQuiz(quiz);\n        \n        if (request.getDifficulty() != null) {\n            question.setDifficulty(Question.Difficulty.fromValue(request.getDifficulty()));\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        \n        List<QuestionOption> options = new ArrayList<>();\n        if (request.getOptions() != null && !request.getOptions().isEmpty()) {\n            for (QuestionOptionDto optionDto : request.getOptions()) {\n                QuestionOption option = new QuestionOption();\n                option.setOptionText(optionDto.getOptionText());\n                option.setIsCorrect(optionDto.getIsCorrect());\n                option.setQuestion(question);\n                options.add(option);\n            }\n            question.setOptions(options);\n        }\n        \n        \n        question = questionRepository.save(question);\n        \n        return mapToResponse(question);\n    }",
-        "ast_hash": "5a2ff9eefeb8e8af6d746593e6373f5d",
-        "method_calls": [
-          {
-            "name": "com.example.demo.repository.QuizRepository.findByIdAndUser(Long id, User user)",
-            "params": []
-          },
-          {
-            "name": "com.example.demo.service.QuestionService.validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType)",
-            "params": []
-          },
-          {
-            "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
-            "params": []
-          }
-        ],
+        "ast_hash": "8f10d3b10380378b8af3d08b9c918c109e123ba37177a7c643c428b01a103d4c",
+        "method_calls": [],
         "used_types": [
           "com.example.demo.dto.CreateQuestionRequest",
-          "com.example.demo.entity.Question.QuestionType",
-          "com.example.demo.entity.QuestionOption",
-          "com.example.demo.entity.Question",
-          "com.example.demo.entity.Quiz",
-          "com.example.demo.dto.QuestionResponse",
-          "com.example.demo.entity.User"
+          "com.example.demo.dto.QuestionResponse"
         ],
         "field_access": [
           "com.example.demo.entity.Question.Difficulty",
@@ -811,17 +789,10 @@
       {
         "name": "com.example.demo.service.QuestionService.getUserQuestions(Long userId)",
         "body": "public List<QuestionResponse> getUserQuestions(Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        List<Question> questions = questionRepository.findByUser(user);\n        return questions.stream()\n            .map(this::mapToResponse)\n            .collect(Collectors.toList());\n    }",
-        "ast_hash": "9de778e932a8cb8f05b3afdf379460ac",
-        "method_calls": [
-          {
-            "name": "com.example.demo.repository.QuestionRepository.findByUser(User user)",
-            "params": []
-          }
-        ],
+        "ast_hash": "225e4ac69f85b43dd00596d75ae422f6e93f93bcdf8185ddc7d5baf2d2eac70c",
+        "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Question",
-          "com.example.demo.dto.QuestionResponse",
-          "com.example.demo.entity.User"
+          "com.example.demo.dto.QuestionResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -833,21 +804,10 @@
       {
         "name": "com.example.demo.service.QuestionService.getQuestionById(Long questionId, Long userId)",
         "body": "public QuestionResponse getQuestionById(Long questionId, Long userId) {\n        User user = userRepository.findById(userId)\n            .orElseThrow(() -> new RuntimeException(\"User not found\"));\n        \n        Question question = questionRepository.findByIdAndUser(questionId, user)\n            .orElseThrow(() -> new RuntimeException(\"Question not found or access denied\"));\n        \n        return mapToResponse(question);\n    }",
-        "ast_hash": "81344bdb80cb227eb7183c30abc3f8de",
-        "method_calls": [
-          {
-            "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
-            "params": []
-          },
-          {
-            "name": "com.example.demo.repository.QuestionRepository.findByIdAndUser(Long id, User user)",
-            "params": []
-          }
-        ],
+        "ast_hash": "5236f5252e29adceb9b259737bb76937aa9c5a50f24c79da74e7a9dd7484ee0a",
+        "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Question",
-          "com.example.demo.dto.QuestionResponse",
-          "com.example.demo.entity.User"
+          "com.example.demo.dto.QuestionResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -859,11 +819,10 @@
       {
         "name": "com.example.demo.service.QuestionService.validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType)",
         "body": "private void validateQuestionData(CreateQuestionRequest request, Question.QuestionType questionType) {\n        switch (questionType) {\n            case MULTIPLE_CHOICE:\n                if (request.getOptions() == null || request.getOptions().isEmpty()) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have options\");\n                }\n                \n                long correctCount = request.getOptions().stream()\n                    .mapToLong(option -> option.getIsCorrect() ? 1 : 0)\n                    .sum();\n                \n                if (correctCount == 0) {\n                    throw new IllegalArgumentException(\"Multiple choice questions must have at least one correct option\");\n                }\n                break;\n                \n            case PRONUNCIATION:\n            case FILL_IN_THE_BLANK:\n                if (request.getCorrectAnswer() == null || request.getCorrectAnswer().trim().isEmpty()) {\n                    throw new IllegalArgumentException(questionType.getValue() + \" questions must have a correct answer\");\n                }\n                break;\n        }\n    }",
-        "ast_hash": "8c6d5a588d5856901c6884fbf83f9440",
+        "ast_hash": "6e78424f667a471e2ff8590c0ee0422cd1fc261c49155f73304d6f8d944097d3",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.dto.CreateQuestionRequest",
-          "com.example.demo.entity.Question.QuestionType"
+          "com.example.demo.dto.CreateQuestionRequest"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -875,12 +834,11 @@
       {
         "name": "com.example.demo.service.QuestionService.mapToResponse(Question question)",
         "body": "private QuestionResponse mapToResponse(Question question) {\n        List<QuestionOptionDto> optionDtos = null;\n        if (question.getOptions() != null && !question.getOptions().isEmpty()) {\n            optionDtos = question.getOptions().stream()\n                .map(option -> new QuestionOptionDto(option.getOptionText(), option.getIsCorrect()))\n                .collect(Collectors.toList());\n        }\n        \n        return new QuestionResponse(\n            question.getId().toString(),\n            question.getQuestionText(),\n            question.getQuestionType().getValue(),\n            optionDtos,\n            question.getCorrectAnswer(),\n            question.getExplanation(),\n            question.getTags(),\n            question.getDifficulty() != null ? question.getDifficulty().getValue() : null,\n            question.getCreatedAt()\n        );\n    }",
-        "ast_hash": "2e4a1af4b51546e9fa92cbb7f3501793",
+        "ast_hash": "96f48a79b3430eb98bd1cc0607091d61381a3a6e7e87eeacf88390e26259a27d",
         "method_calls": [],
         "used_types": [
-          "com.example.demo.entity.Question",
-          "com.example.demo.dto.QuestionResponse",
-          "com.example.demo.dto.QuestionOptionDto"
+          "com.example.demo.dto.QuestionOptionDto",
+          "com.example.demo.dto.QuestionResponse"
         ],
         "field_access": [],
         "inheritance_info": [],
@@ -895,6 +853,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   },
@@ -904,13 +863,13 @@
     "full_class_name": "com.example.demo.Demo1ApplicationTests",
     "file_path": "f:\\01_projects\\axonion\\data\\demo-java\\src\\test\\java\\com\\example\\demo\\Demo1ApplicationTests.java",
     "content": "@SpringBootTest\nclass Demo1ApplicationTests {\n\n    @Test\n    void contextLoads() {\n    }\n\n}",
-    "ast_hash": "51f91247f5c809d2e520b60ee4bc37b3",
+    "ast_hash": "6bc9bbbe74ea488fcca6f5a0d65c5bf073ddb6cfeccc02da10701ecddae4765a",
     "implements": [],
     "methods": [
       {
         "name": "com.example.demo.Demo1ApplicationTests.contextLoads()",
         "body": "@Test\n    void contextLoads() {\n    }",
-        "ast_hash": "73ccd8775aee3f5c2d092289171b6628",
+        "ast_hash": "9d8b0c6ae81c134e196ee4bff7210b52c2d07402eeea53d2ff4d7210b3bd68ec",
         "method_calls": [],
         "used_types": [],
         "field_access": [],
@@ -926,6 +885,7 @@
     ],
     "project_id": "2",
     "branch": "main",
+    "used_types": [],
     "is_nested": false,
     "type": "regular"
   }
